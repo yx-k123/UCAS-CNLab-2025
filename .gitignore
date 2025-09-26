@@ -1,0 +1,14 @@
+Template/
+prj1/fig/
+prj1/font/
+
+# figures
+*.png
+*.jpg
+*.jpeg
+
+# latex intermediate files
+*.aux
+*.log
+*.out
+*.synctex.gz
