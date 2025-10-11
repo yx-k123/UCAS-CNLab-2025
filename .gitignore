@@ -12,3 +12,8 @@ prj1/font/
 *.log
 *.out
 *.synctex.gz
+
+*.dat
+*.cap
+*.csv
+*.txt
