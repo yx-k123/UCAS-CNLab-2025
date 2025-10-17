@@ -156,6 +156,8 @@ void handle_http_request(int sock)
     strcat(new_url, http_request->line.url);
 
     response_len = sprintf(response, "%s %d Moved Permanently\r\nLocation: %s\r\n\r\n", http_request->line.version, Moved_Permanently, new_url);
+    // printf("%s %d Moved Permanently to %s\n", http_request->line.method, Moved_Permanently, new_url);
+    // fflush(stdout);
 
     if (send(sock, response, response_len, 0) < 0) {
         perror("send failed");
@@ -210,11 +212,15 @@ void handle_https_request(SSL* ssl)
             fseek(file_pointer, 0, SEEK_SET);
 
             response_len = sprintf(response, "%s %d OK\r\nContent-Length: %d\r\n\r\n", http_request->line.version, OK, file_size);
+            // printf("%s %d OK, Content-Length: %d\n", http_request->line.method, OK, file_size);
+            // fflush(stdout);
             SSL_write(ssl, response, response_len);
 
             char *file_buffer = (char *)malloc(file_size);
             fread(file_buffer, 1, file_size, file_pointer);
             SSL_write(ssl, file_buffer, file_size);
+            printf("%s", file_buffer);
+            fflush(stdout);
             free(file_buffer);
         } else if (option == 1) {
             // 206 Partial Content
@@ -241,6 +247,8 @@ void handle_https_request(SSL* ssl)
             fseek(file_pointer, start, SEEK_SET);
 
             response_len = sprintf(response, "%s %d Partial Content\r\nContent-Length: %d\r\nContent-Range: bytes %d-%d/%d\r\n\r\n", http_request->line.version, Partial_Content, content_length, start, end, file_size);
+            // printf("%s %d Partial Content, Content-Length: %d, Content-Range: bytes %d-%d/%d\n", http_request->line.method, Partial_Content, content_length, start, end, file_size);
+            // fflush(stdout);
             SSL_write(ssl, response, response_len);
 
             char *file_buffer = (char *)malloc(content_length);
@@ -296,4 +304,17 @@ void decode_request(char *raw_request, Request *request)
     } else {
         request->body = NULL;
     }
+
+    // printf("Method: %s, URL: %s, Version: %s\n", request->line.method, request->line.url, request->line.version);
+    // fflush(stdout);
+    // for (Header *header = request->headers; header != NULL; header = header->next) {
+    //     printf("Header: %s: %s\n", header->name, header->value);
+    //     fflush(stdout);
+    // }
+    // if (request->body != NULL) {
+    //     printf("Body: %s\n", request->body);
+    //     fflush(stdout);
+    // }
+    // printf("\n");
+    // return;
 }
