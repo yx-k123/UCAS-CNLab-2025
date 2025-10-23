@@ -1,6 +1,4 @@
 Template/
-prj1/fig/
-prj1/font/
 
 # figures
 *.png
@@ -17,3 +15,11 @@ prj1/font/
 *.cap
 *.csv
 *.txt
+
+*.o
+*.32
+*.arm
+
+!Makefile
+!LICENSE
+!README

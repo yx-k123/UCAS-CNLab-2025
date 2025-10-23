@@ -1,0 +1,62 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-Wall",
+      "-Iinclude",
+      "-o",
+      "broadcast.o",
+      "broadcast.c"
+    ],
+    "directory": "/home/kouyixin/CNLab/04-hub+switch/switch",
+    "file": "/home/kouyixin/CNLab/04-hub+switch/switch/broadcast.c",
+    "output": "/home/kouyixin/CNLab/04-hub+switch/switch/broadcast.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-Wall",
+      "-Iinclude",
+      "-o",
+      "device_internal.o",
+      "device_internal.c"
+    ],
+    "directory": "/home/kouyixin/CNLab/04-hub+switch/switch",
+    "file": "/home/kouyixin/CNLab/04-hub+switch/switch/device_internal.c",
+    "output": "/home/kouyixin/CNLab/04-hub+switch/switch/device_internal.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-Wall",
+      "-Iinclude",
+      "-o",
+      "mac.o",
+      "mac.c"
+    ],
+    "directory": "/home/kouyixin/CNLab/04-hub+switch/switch",
+    "file": "/home/kouyixin/CNLab/04-hub+switch/switch/mac.c",
+    "output": "/home/kouyixin/CNLab/04-hub+switch/switch/mac.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-Wall",
+      "-Iinclude",
+      "-o",
+      "main.o",
+      "main.c"
+    ],
+    "directory": "/home/kouyixin/CNLab/04-hub+switch/switch",
+    "file": "/home/kouyixin/CNLab/04-hub+switch/switch/main.c",
+    "output": "/home/kouyixin/CNLab/04-hub+switch/switch/main.o"
+  }
+]
