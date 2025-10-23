@@ -1,0 +1,372 @@
+% 这是中国科学院大学计算机科学与技术专业《计算机组成原理（研讨课）》使用的实验报告 Latex 模板
+% 本模板与 2024 年 2 月 Jun-xiong Ji 完成, 更改自由 Shing-Ho Lin 和 Jun-Xiong Ji 于 2022 年 9 月共同完成的基础物理实验模板
+% 如有任何问题, 请联系: jijunxoing21@mails.ucas.ac.cn
+% This is the LaTeX template for report of Experiment of Computer Organization and Design courses, based on its provided Word template. 
+% This template is completed on Febrary 2024, based on the joint collabration of Shing-Ho Lin and Junxiong Ji in September 2022. 
+% Adding numerous pictures and equations leads to unsatisfying experience in Word. Therefore LaTeX is better. 
+% Feel free to contact me via: jijunxoing21@mails.ucas.ac.cn
+
+\documentclass[11pt]{article}
+
+\usepackage[a4paper]{geometry}
+\geometry{left=2.0cm,right=2.0cm,top=2.5cm,bottom=2.5cm}
+
+\usepackage{ctex} % 支持中文的LaTeX宏包
+\usepackage{amsmath,amsfonts,graphicx,subfigure,amssymb,bm,amsthm,mathrsfs,mathtools,breqn} % 数学公式和符号的宏包集合
+\usepackage{algorithm,algorithmicx} % 算法和伪代码
+\usepackage[noend]{algpseudocode} % 算法和伪代码
+\usepackage{fancyhdr} % 自定义页眉页脚
+\usepackage[framemethod=TikZ]{mdframed} % 创建带边框的框架
+\usepackage{fontspec} % 字体设置
+\usepackage{adjustbox} % 调整盒子大小
+\usepackage{fontsize} % 设置字体大小
+\usepackage{tikz,xcolor} % 绘制图形和使用颜色
+\usepackage{multicol} % 多栏排版
+\usepackage{multirow} % 表格中合并单元格
+\usepackage{pdfpages} % 插入PDF文件
+\usepackage{listings} % 在文档中插入源代码
+\usepackage{wrapfig} % 文字绕排图片
+\usepackage{bigstrut,multirow,rotating} % 支持在表格中使用特殊命令
+\usepackage{booktabs} % 创建美观的表格
+\usepackage{circuitikz} % 绘制电路图
+\usepackage{zhnumber} % 中文序号（用于标题）
+\usepackage{tabularx} % 表格折行
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\lstset{
+  frame=tb,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  framerule=1pt,
+  rulecolor=\color{gray!35},
+  backgroundcolor=\color{gray!5},
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+}
+
+% 超链接支持 (一定要在大多数包之后, cleveref 之前)
+% colorlinks=true 使链接文字着色而不是加方框; hidelinks 可去掉颜色
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=magenta]{hyperref}
+
+% 轻松引用, 可以用\cref{}指令直接引用, 自动加前缀. 需要在 hyperref 之后加载
+% 例: 图片label为fig:1  => \cref{fig:1} -> Figure.1; \ref{fig:1} -> 1 (纯数字)
+\usepackage[capitalize]{cleveref}
+% \crefname{section}{Sec.}{Secs.}
+\Crefname{section}{Section}{Sections}
+\Crefname{table}{Table}{Tables}
+\crefname{table}{Table.}{Tabs.}
+
+% \setmainfont{Palatino Linotype.ttf}
+% \setCJKmainfont{SimHei.ttf}
+% \setCJKsansfont{Songti.ttf}
+% \setCJKmonofont{SimSun.ttf}
+\punctstyle{kaiming}
+% 偏好的几个字体, 可以根据需要自行加入字体ttf文件并调用
+
+\renewcommand{\emph}[1]{\begin{kaishu}#1\end{kaishu}}
+
+% 对 section 等环境的序号使用中文
+\renewcommand \thesection{\zhnum{section}、}
+\renewcommand \thesubsection{\arabic{section}.\arabic{subsection}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%改这里可以修改实验报告表头的信息
+\newcommand{\name}{寇逸欣}
+\newcommand{\studentNum}{2023K8009922004}
+\newcommand{\major}{计算机科学与技术}
+\newcommand{\labNum}{02}
+\newcommand{\labName}{socket应用编程实验}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\input{tex_file/head.tex}
+
+\section{实验内容}
+本实验要求使用C语言实现一个简单的HTTP服务器，能够处理基本的GET请求，解析请求报文、返回相应应答及内容。具体要求如下：
+
+\begin{table}[H]
+\centering
+\caption{需要支持的状态码及场景}
+\begin{tabular}{|c|p{10cm}|}
+\hline
+\textbf{状态码} & \textbf{场景} \\ \hline
+200 OK & 对于443端口接收的请求，如果程序所在文件夹存在所请求的文件，返回该状态码，以及所请求的文件 \\ \hline
+301 Moved Permanently & 对于80端口接收的请求，返回该状态码，在应答中使用Location字段表达相应的https URL \\ \hline
+206 Partial Content & 对于443端口接收的请求，如果所请求的为部分内容（请求中有Range字段），返回该状态码，以及相应的部分内容 \\ \hline
+404 Not Found & 对于443端口接收的请求，如果程序所在文件夹没有所请求的文件，返回该状态码 \\ \hline
+\end{tabular}
+\end{table}
+
+\section{实验流程}
+\subsection{主函数设计}
+任务要求我们同时监听80和443端口，故而想到在主函数中创建两个线程，分别调用监听端口函数，传递参数80和443。主函数代码如下：
+\begin{lstlisting}[language=C]
+int main()
+{
+    pthread_t http_thread;
+    pthread_t https_thread;
+
+    int http_port = HTTP_PORT;
+    int https_port = HTTPS_PORT;
+
+    if (pthread_create(&http_thread, NULL, listen_port, &http_port)) {
+        perror("creat http thread error!\n");
+        exit(1);
+    }
+    if (pthread_create(&https_thread, NULL, listen_port, &https_port)) {
+        perror("creat https thread error!\n");
+        exit(1);
+    }
+
+    pthread_join(http_thread, NULL);
+    pthread_join(https_thread, NULL);
+
+    return 0;
+}
+\end{lstlisting}
+pthread\_create函数创建线程，传递的参数是监听端口函数listen\_port和端口号。pthread\_join函数等待线程结束。
+
+\subsection{端口监听函数}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{fig/flowchart.png}
+\caption{客户端应答流程图}
+\end{figure}
+
+在给的代码框架中，已经有了这部分的代码，我们只需要修改一些细节。具体来说就是要设置一个端口号，
+用来区分是80端口还是443端口。然后在接收到请求后，调用处理请求函数handle\_https\_request或handle\_http\_request。
+
+\subsection{request 解析}
+我们在接受到请求后，自然的想要将请求报文解析出来。故首先，我们需要设计数据结构Request来存储这些数据，包含请求方法、URL、版本号、Range字段等。
+\begin{lstlisting}[language=C]
+typedef struct Header {
+    char *name;
+    char *value;
+    struct Header *next;
+} Header;
+
+typedef struct line {
+    char method[8];
+    char url[256];
+    char version[16];
+} Line;
+
+typedef struct Request{
+    Line line;
+    Header *headers;
+    char *body;
+} Request;
+\end{lstlisting}
+
+然后我们需要设计一个函数来解析请求报文。请求报文的样式如下：
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{fig/request.png}
+\caption{请求报文格式}
+\end{figure}
+
+由此可知，我们可以先按行分割请求报文，然后解析第一行，按空格分割得到请求方法、URL和版本号。
+接下来解析后续的每一行，按冒号分割得到Header的name和value，存入链表中，然后是请求体。最后将解析结果存入Request结构体中。
+\begin{lstlisting}[language=C]
+void decode_request(char *raw_request, Request *request)
+{
+    char *line_end = strstr(raw_request, "\r\n");
+    sscanf(raw_request, "%s %s %s", request->line.method, request->line.url, request->line.version);
+
+    char *header_start = line_end + 2;
+    char *header_end;
+    Header *current_header = NULL;
+
+    while ((header_end = strstr(header_start, "\r\n")) != NULL && header_end != header_start) {
+        Header *new_header = (Header *)malloc(sizeof(Header));
+        new_header->next = NULL;
+
+        char *colon_pos = strstr(header_start, ": ");
+        if (colon_pos != NULL) {
+            int name_len = colon_pos - header_start;
+            int value_len = header_end - (colon_pos + 2);
+
+            new_header->name = (char *)malloc(name_len + 1);
+            new_header->value = (char *)malloc(value_len + 1);
+
+            strncpy(new_header->name, header_start, name_len);
+            new_header->name[name_len] = '\0';
+            strncpy(new_header->value, colon_pos + 2, value_len);
+            new_header->value[value_len] = '\0';
+
+            if (current_header == NULL) {
+                request->headers = new_header;
+            } else {
+                current_header->next = new_header;
+            }
+            current_header = new_header;
+        }
+
+        header_start = header_end + 2;
+    }
+
+    if (strcmp(request->line.method, "POST") == 0) {
+        request->body = strdup(header_start);
+    } else {
+        request->body = NULL;
+    }
+}
+\end{lstlisting}
+
+最终，h1所收到并解析出的请求报文如下：
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{fig/wireshark_request.png}
+\caption{h1收到的请求报文}
+\end{figure}
+
+\subsection{http请求处理}
+对于http请求，我们永远将其重定向到https。故而我们只需要返回301状态码，并在Location字段中拼接"https://10.0.0.1"和请求的URL即可。
+
+最终http发送的应答报文如下：
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{fig/wireshark_http_response.png}
+\caption{h1发送的http应答报文}
+\end{figure}
+
+\subsection{https请求处理}
+对于https请求，我们需要根据请求的URL来判断请求的文件是否存在，若存在则返回200状态码和文件内容，若不存在则返回404状态码。
+另外，我们还需要处理Range字段，若请求中包含Range字段，则返回206状态码和部分内容。
+
+根据test文件可知，请求文件的url的格式为"/path/filename"，故我们只需要在前面加上"."即可得到文件路径"./path/filename"。
+
+对于Range字段，我们需要解析出起始位置和结束位置。不过结束位置可能不存在，若不存在则表示请求从起始位置到文件末尾的内容。
+
+此时我们设置一个file\_pointer指向文件的起始位置，然后使用fseek函数将文件指针移动到起始位置，接着使用fread函数读取指定长度的内容。
+最后将读取的内容存入响应报文中返回给客户端。
+
+https返回的应答报文如下：
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{fig/wireshark_https_response.png}
+\caption{h1发送的https应答报文}
+\end{figure}
+
+206返回的结果如下图：
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{fig/wireshark_206_response.png}
+\caption{h1发送的206应答报文}
+\end{figure}
+
+由于https和http请求处理函数大部分代码相似，我们这里只展示https请求处理函数handle\_https\_request的代码。
+\begin{lstlisting}[language=C]
+void handle_https_request(SSL* ssl)
+{   
+    char *request = calloc(1024, sizeof(char));
+    char *response = calloc(1024, sizeof(char));
+    int request_len = 0;
+    int response_len = 0;
+
+    if (SSL_accept(ssl) == -1){
+		perror("SSL_accept failed");
+		exit(1);
+	}
+
+    request_len = SSL_read(ssl, request, 1024);
+    if (request_len < 0) {
+        perror("SSL_read failed");
+        exit(1);
+    }
+
+    Request *http_request = calloc(1, sizeof(Request));
+    decode_request(request, http_request);
+
+    int option = 0; // 0: 200 OK, 1: 206 Partial Content
+    FILE *file_pointer = NULL;
+
+    for (Header *header = http_request->headers; header != NULL; header = header->next) {
+        if (strcmp(header->name, "Range") == 0) {
+            option = 1;
+            break;
+        }
+    }
+
+    // search file
+    char file_path[256] = ".";
+    char *file_path_pointer = file_path + 1;
+    strcat(file_path, http_request->line.url);
+
+    if ((file_pointer = fopen(file_path_pointer - 1, "r")) == NULL) {
+        response_len = sprintf(response, "%s %d Not Found\r\n\r\n", http_request->line.version, NOT_FOUND);
+        SSL_write(ssl, response, response_len);
+    } else {
+        if (option == 0) {
+            // 200 OK
+            fseek(file_pointer, 0, SEEK_END);
+            int file_size = ftell(file_pointer);
+            fseek(file_pointer, 0, SEEK_SET);
+
+            response_len = sprintf(response, "%s %d OK\r\nContent-Length: %d\r\n\r\n", http_request->line.version, OK, file_size);
+            SSL_write(ssl, response, response_len);
+
+            char *file_buffer = (char *)malloc(file_size);
+            fread(file_buffer, 1, file_size, file_pointer);
+            SSL_write(ssl, file_buffer, file_size);
+            free(file_buffer);
+        } else if (option == 1) {
+            // 206 Partial Content
+            char range_value[64];
+            for (Header *header = http_request->headers; header != NULL; header = header->next) {
+                if (strcmp(header->name, "Range") == 0) {
+                    strcpy(range_value, header->value);
+                    break;
+                }
+            }
+
+            int start, end;
+            if (sscanf(range_value, "bytes=%d-%d", &start, &end) != 2) {
+                sscanf(range_value, "bytes=%d-", &start);
+                end = -1;
+            }
+
+            fseek(file_pointer, 0, SEEK_END);
+            int file_size = ftell(file_pointer);
+            if (end == -1 || end >= file_size) {
+                end = file_size - 1;
+            }
+            int content_length = end - start + 1;
+            fseek(file_pointer, start, SEEK_SET);
+
+            response_len = sprintf(response, "%s %d Partial Content\r\nContent-Length: %d\r\nContent-Range: bytes %d-%d/%d\r\n\r\n", http_request->line.version, Partial_Content, content_length, start, end, file_size);
+            SSL_write(ssl, response, response_len);
+
+            char *file_buffer = (char *)malloc(content_length);
+            fread(file_buffer, 1, content_length, file_pointer);
+            SSL_write(ssl, file_buffer, content_length);
+            free(file_buffer);
+        }
+        fclose(file_pointer);
+    }
+
+    return;
+}
+\end{lstlisting}
+
+\section{遇到的问题}
+
+\begin{enumerate}
+  \item 在实现https请求处理函数时，最开始没有考虑到Range结束位置可能不存在的情况，导致程序在处理类似"Range: bytes=200-"的请求时出错。后来通过检查sscanf的返回值来解决这个问题。
+  \item 在实现http请求处理函数时，最开始没有正确设置Location字段，导致无法正确重定向到https。后来通过在Location字段中拼接"https://10.0.0.1"来解决这个问题。
+\end{enumerate}
+
+\end{document}

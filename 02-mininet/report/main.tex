@@ -1,0 +1,274 @@
+% 这是中国科学院大学计算机科学与技术专业《计算机组成原理（研讨课）》使用的实验报告 Latex 模板
+% 本模板与 2024 年 2 月 Jun-xiong Ji 完成, 更改自由 Shing-Ho Lin 和 Jun-Xiong Ji 于 2022 年 9 月共同完成的基础物理实验模板
+% 如有任何问题, 请联系: jijunxoing21@mails.ucas.ac.cn
+% This is the LaTeX template for report of Experiment of Computer Organization and Design courses, based on its provided Word template. 
+% This template is completed on Febrary 2024, based on the joint collabration of Shing-Ho Lin and Junxiong Ji in September 2022. 
+% Adding numerous pictures and equations leads to unsatisfying experience in Word. Therefore LaTeX is better. 
+% Feel free to contact me via: jijunxoing21@mails.ucas.ac.cn
+
+\documentclass[11pt]{article}
+
+\usepackage[a4paper]{geometry}
+\geometry{left=2.0cm,right=2.0cm,top=2.5cm,bottom=2.5cm}
+
+\usepackage{ctex} % 支持中文的LaTeX宏包
+\usepackage{amsmath,amsfonts,graphicx,subfigure,amssymb,bm,amsthm,mathrsfs,mathtools,breqn} % 数学公式和符号的宏包集合
+\usepackage{algorithm,algorithmicx} % 算法和伪代码
+\usepackage[noend]{algpseudocode} % 算法和伪代码
+\usepackage{fancyhdr} % 自定义页眉页脚
+\usepackage[framemethod=TikZ]{mdframed} % 创建带边框的框架
+\usepackage{fontspec} % 字体设置
+\usepackage{adjustbox} % 调整盒子大小
+\usepackage{fontsize} % 设置字体大小
+\usepackage{tikz,xcolor} % 绘制图形和使用颜色
+\usepackage{multicol} % 多栏排版
+\usepackage{multirow} % 表格中合并单元格
+\usepackage{pdfpages} % 插入PDF文件
+\usepackage{listings} % 在文档中插入源代码
+\usepackage{wrapfig} % 文字绕排图片
+\usepackage{bigstrut,multirow,rotating} % 支持在表格中使用特殊命令
+\usepackage{booktabs} % 创建美观的表格
+\usepackage{circuitikz} % 绘制电路图
+\usepackage{zhnumber} % 中文序号（用于标题）
+\usepackage{tabularx} % 表格折行
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\lstset{
+  frame=tb,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  framerule=1pt,
+  rulecolor=\color{gray!35},
+  backgroundcolor=\color{gray!5},
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+}
+
+% 超链接支持 (一定要在大多数包之后, cleveref 之前)
+% colorlinks=true 使链接文字着色而不是加方框; hidelinks 可去掉颜色
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=magenta]{hyperref}
+
+% 轻松引用, 可以用\cref{}指令直接引用, 自动加前缀. 需要在 hyperref 之后加载
+% 例: 图片label为fig:1  => \cref{fig:1} -> Figure.1; \ref{fig:1} -> 1 (纯数字)
+\usepackage[capitalize]{cleveref}
+% \crefname{section}{Sec.}{Secs.}
+\Crefname{section}{Section}{Sections}
+\Crefname{table}{Table}{Tables}
+\crefname{table}{Table.}{Tabs.}
+
+% \setmainfont{Palatino Linotype.ttf}
+% \setCJKmainfont{SimHei.ttf}
+% \setCJKsansfont{Songti.ttf}
+% \setCJKmonofont{SimSun.ttf}
+\punctstyle{kaiming}
+% 偏好的几个字体, 可以根据需要自行加入字体ttf文件并调用
+
+\renewcommand{\emph}[1]{\begin{kaishu}#1\end{kaishu}}
+
+% 对 section 等环境的序号使用中文
+\renewcommand \thesection{\zhnum{section}、}
+\renewcommand \thesubsection{\arabic{section}.\arabic{subsection}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%改这里可以修改实验报告表头的信息
+\newcommand{\name}{寇逸欣}
+\newcommand{\studentNum}{2023K8009922004}
+\newcommand{\major}{计算机科学与技术}
+\newcommand{\labNum}{01}
+\newcommand{\labName}{互联网协议实验}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\input{tex_file/head.tex}
+
+\section{实验一：互联网协议实验}
+\subsection{实验内容}
+本实验主要包括以下内容：
+\begin{enumerate}
+  \item 在节点h1上开启wireshark抓包，用wget下载www.ucas.ac.cn页面。
+  \item 调研说明wireshark抓到的几种协议——ARP, DNS, TCP, HTTP, HTTPS。
+  \item 调研解释h1下载ucas页面的整个过程几种协议的运行机制。
+\end{enumerate}
+
+\subsection{实验步骤}
+实验环境：virtualbox + ubuntu24.04 server + mininet + wireshark
+
+由于使用ubuntu server版本，默认没有图形界面，因此采用终端命令行操作。并将抓包结果保存为.cap文件，之后在本地电脑上使用wireshark打开分析。在终端中输入以下命令进行实验：
+\begin{lstlisting}
+sudo apt install wireshark xterm ifupdown
+sudo mn --nat
+mininet> h1 echo "nameserver 1.2.4.8" > /etc/resolv.conf
+mininet> h1 wget www.ucas.ac.cn
+\end{lstlisting}
+
+\subsection{实验结果}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{fig/wireshark.png}
+  \caption{Wireshark抓包结果}
+  \label{fig:wireshark}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{fig/html.png}
+  \caption{html文件}
+  \label{fig:html}
+\end{figure}
+
+如图\ref{fig:wireshark}\,所示，抓包结果中包含了ARP, DNS, TCP, HTTP, HTTPS等多种协议。
+
+\subsection{实验分析}
+\subsubsection{ARP协议}
+ARP协议（Address Resolution Protocol，地址解析协议）用于将网络层地址（如IP地址）解析为数据链路层地址（如MAC地址）。在局域网中，当一个主机需要与另一个主机通信时，
+它需要知道对方的MAC地址。 ARP协议通过广播ARP请求来实现地址解析。请求包含发送方的IP地址和MAC地址，以及目标主机的IP地址。所有接收到ARP请求的主机都会检查请求中的目标IP地址，
+如果匹配自己的IP地址，则会发送一个ARP响应，包含自己的MAC地址。发送方接收到ARP响应后，就可以将目标主机的MAC地址缓存起来，以便后续通信使用。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{fig/arp.png}
+  \caption{ARP协议}
+  \label{fig:arp}
+\end{figure}
+
+\ref{fig:arp}\, 图中展示了ARP协议的工作流程。主机A需要与主机B通信，但不知道主机B的MAC地址。于是主机A广播一个ARP请求，询问谁拥有IP地址10.0.0.3。
+主机B收到请求后，发现请求中的目标IP地址与自己的IP地址匹配，于是发送一个ARP响应，告诉主机A自己的MAC地址为4a:c9:ff:61:78:25。主机A收到响应后，就可以使用该MAC地址与主机B进行通信。
+
+\subsubsection{DNS协议}
+DNS协议（Domain Name System，域名系统）用于将域名解析为IP地址。在互联网中，主机之间的通信是通过IP地址进行的，但为了方便用户记忆，通常使用域名来代替IP地址。
+当用户在浏览器中输入一个域名时，计算机会首先向DNS服务器发送一个DNS请求，请求解析该域名。DNS服务器收到请求后，会查找该域名对应的IP地址，并将结果返回给客户端。
+客户端收到响应后，就可以使用该IP地址与目标主机进行通信。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{fig/dns.png}
+  \caption{DNS协议}
+  \label{fig:dns}
+\end{figure}
+
+我们可以选择 Follow UDP Stream 来查看 DNS 请求和响应的详细内容，如图 \ref{fig:dns_stream} 所示。
+10.0.0.1 向 1.2.4.8 发送 DNS 查询，请求解析 www.ucas.ac.cn 的 IPv4（A 记录）和 IPv6（AAAA 记录）地址。1.2.4.8 向 10.0.0.1 返回 DNS 响应，
+响应中包含了 www.ucas.ac.cn 的 A 记录（IPv4 地址）、NS 记录（域名服务器）、SOA 记录（起始授权机构）等信息。
+查询和响应中均显示了 DNS 查询的 ID、类型（A/AAAA/SOA/NS）、目标域名和解析结果。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{fig/dns_stream.png}
+  \caption{DNS请求和响应的详细内容}
+  \label{fig:dns_stream}
+\end{figure}
+
+\subsubsection{TCP协议}
+TCP协议（Transmission Control Protocol，传输控制协议）是一种面向连接的、可靠的传输层协议。它为应用层提供了可靠的数据传输服务，确保数据包按照顺序到达目的地，
+并且在丢失或损坏的情况下能够进行重传。TCP协议通过三次握手建立连接，通过四次挥手关闭连接。在数据传输过程中，TCP协议会对数据进行分段，并为每个数据段分配序列号，
+以便接收方能够按照正确的顺序重组数据。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{fig/tcp.png}
+  \caption{TCP协议}
+  \label{fig:tcp}
+\end{figure}
+
+图 \ref{fig:tcp_stream} 展示了一个完整的 HTTP 请求与响应，以及 TCP 连接的建立和正常关闭过程，具体如下：
+\begin{itemize}
+  \item \textbf{TCP三次握手建立连接}
+  \begin{enumerate}
+    \item 10.0.0.1 → 124.16.77.5：SYN
+    \item 124.16.77.5 → 10.0.0.1：SYN, ACK
+    \item 10.0.0.1 → 124.16.77.5：ACK
+  \end{enumerate}
+
+  \item \textbf{HTTP请求与响应}
+  \begin{enumerate}
+    \item 10.0.0.1 → 124.16.77.5：发送 HTTP GET 请求
+    \item 124.16.77.5 → 10.0.0.1：返回 HTTP/1.1 301 Moved Permanently（网页永久重定向）
+  \end{enumerate}
+
+  \item \textbf{TCP四次挥手正常断开连接}
+  \begin{enumerate}
+    \item 10.0.0.1 → 124.16.77.5：ACK
+    \item 10.0.0.1 → 124.16.77.5：FIN, ACK（主动关闭连接）
+    \item 124.16.77.5 → 10.0.0.1：ACK
+    \item 124.16.77.5 → 10.0.0.1：FIN, ACK（被动关闭连接）
+    \item 10.0.0.1 → 124.16.77.5：ACK
+  \end{enumerate}
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{fig/tcp_stream.png}
+  \caption{TCP连接的详细内容}
+  \label{fig:tcp_stream}
+\end{figure}
+
+\subsubsection{HTTP协议}
+HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是应用层协议，用于在客户端和服务器之间传输超文本数据。当用户在浏览器中输入一个URL时，
+浏览器会向服务器发送一个HTTP请求，请求获取指定的资源。服务器收到请求后，会返回一个HTTP响应，包含请求的资源和状态码。HTTP协议是无状态的，即每个请求都是独立的，
+服务器不会记录客户端的状态信息。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{fig/http.png}
+  \caption{HTTP协议}
+  \label{fig:http}
+\end{figure}
+
+\subsubsection{HTTPS协议}
+HTTPS协议（Hypertext Transfer Protocol Secure，安全超文本传输协议）是在HTTP协议的基础上，加入了SSL/TLS协议进行加密和身份验证。
+它通过在客户端和服务器之间建立一个安全的加密通道，确保数据在传输过程中的安全性和完整性。HTTPS协议广泛应用于在线支付、网上银行等对安全性要求较高的场景。
+
+\section{实验二：流完成时间实验}
+
+\subsection{实验内容}
+本实验主要包括以下内容：
+\begin{enumerate}
+  \item 利用fct_exp.py脚本复现上页幻灯片中的图，每个数据点做3次实验，取均值
+  \item 调研解释图中的现象，提示：TCP传输、慢启动机制
+\end{enumerate}
+
+\subsection{实验数据}
+\begin{table}[H]
+  \centering
+  \caption{流完成时间实验数据}
+  \label{tab:fct_data}
+  \begin{tabular}{cccccc}
+    \toprule
+    \textbf{Size (MB)} & \textbf{10.0 Mbps} & \textbf{50.0 Mbps} & \textbf{100.0 Mbps} & \textbf{500.0 Mbps} & \textbf{1000.0 Mbps} \\
+    \midrule
+    1.0  & 1.154964 & 0.721915 & 0.798944 & 0.792040 & 0.793336 \\
+    10.0 & 8.696521 & 2.234174 & 1.484441 & 1.046817 & 1.100703 \\
+    100.0 & 84.854350 & 17.423328 & 9.137862 & 2.552476 & 1.797471 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+根据表\ref{tab:fct_data}\,中的数据，我们可以绘制出流完成时间与带宽的关系图，如图\ref{fig:fct_plot}所示。
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{fig/fct_plot.png}
+  \caption{流完成时间与带宽的关系图}
+  \label{fig:fct_plot}
+\end{figure}
+
+\subsection{实验分析}
+从图\ref{fig:fct_plot}\,中可以看出，随着带宽的增加，流完成时间呈现出下降的趋势。这是因为更高的带宽允许更多的数据在单位时间内传输，从而减少了传输所需的时间。
+然而，流完成时间的下降并不是线性的，尤其是在较低带宽下，流完成时间的变化较为显著，而在较高带宽下，流完成时间的变化趋于平缓。
+这种现象可以通过TCP的慢启动机制来解释。TCP在连接建立初期采用慢启动算法，初始拥塞窗口较小，随着数据的成功传输，拥塞窗口逐渐增大，从而提高了传输速率。
+在低带宽下，慢启动阶段占据了较大的比例，因此流完成时间变化较大。而在高带宽下，慢启动阶段相对较短，传输速率更快，流完成时间的变化趋于平缓。
+此外，随着带宽的增加，其他因素如延迟和协议开销可能会对流完成时间产生更大的影响，从而导致流完成时间的下降幅度减小。
+
+\end{document}

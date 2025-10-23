@@ -1,0 +1,23 @@
+Template/
+.vscode/
+
+# figures
+*.png
+*.jpg
+*.jpeg
+
+# latex intermediate files
+*.aux
+*.log
+*.out
+*.synctex.gz
+
+*.dat
+*.cap
+*.csv
+*.txt
+
+*.o
+*.32
+*.arm
+*.pcap
