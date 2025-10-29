@@ -45,7 +45,7 @@ void ustack_run()
 				len = recvfrom(instance->fds[i].fd, buf, ETH_FRAME_LEN, 0, \
 						(struct sockaddr*)&addr, &addr_len);
 				if (len <= 0) {
-					log(ERROR, "receive packet error: %s", strerror(errno));
+					// log(ERROR, "receive packet error: %s", strerror(errno));
 				}
 				else if (addr.sll_pkttype == PACKET_OUTGOING) {
 					// XXX: Linux raw socket will capture both incoming and
@@ -61,7 +61,7 @@ void ustack_run()
 
 					char *packet = malloc(len);
 					if (!packet) {
-						log(ERROR, "malloc failed when receiving packet.");
+						// log(ERROR, "malloc failed when receiving packet.");
 						continue;
 					}
 					memcpy(packet, buf, len);
@@ -75,7 +75,7 @@ void ustack_run()
 int main(int argc, const char **argv)
 {
 	if (getuid() && geteuid()) {
-		printf("Permission denied, should be superuser!\n");
+		// printf("Permission denied, should be superuser!\n");
 		exit(1);
 	}
 

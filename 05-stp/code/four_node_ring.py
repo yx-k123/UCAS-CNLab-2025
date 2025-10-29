@@ -40,10 +40,26 @@ class RingTopo(Topo):
         b3 = self.addHost('b3')
         b4 = self.addHost('b4')
 
+        # add extra hosts to increase the number of ports
+        # b5 = self.addHost('b5')  
+        # b6 = self.addHost('b6')  
+        # b7 = self.addHost('b7')  
+        # b8 = self.addHost('b8')  
+
         self.addLink(b1, b2)
         self.addLink(b1, b3)
         self.addLink(b2, b4)
         self.addLink(b3, b4)
+
+        # extra links
+        # self.addLink(b1, b5)
+        # self.addLink(b2, b6)
+        # self.addLink(b3, b7)
+        # self.addLink(b4, b8)
+        # self.addLink(b5, b6)
+        # self.addLink(b7, b8)
+        # self.addLink(b5, b7)
+        # self.addLink(b6, b8)
 
 if __name__ == '__main__':
     check_scripts()
@@ -65,7 +81,7 @@ if __name__ == '__main__':
 
             node.setMAC(mac, intf = intf)
 
-        # node.cmd('./stp > %s-output.txt 2>&1 &' % name)
+        node.cmd('./stp > %s-output.txt 2>&1 &' % name)
         # node.cmd('./stp-reference > %s-output.txt 2>&1 &' % name)
 
     net.start()

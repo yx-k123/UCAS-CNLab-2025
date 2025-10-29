@@ -58,7 +58,7 @@ bool stp_check_timer(stp_timer_t *timer, long long int now)
 void stp_timer_run_once(long long int now)
 {
 	if (!timer_list_initialized) {
-		log(ERROR, "no timer in the list.");
+		// log(ERROR, "no timer in the list.");
 		return ;
 	}
 

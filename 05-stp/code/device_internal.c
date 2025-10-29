@@ -14,7 +14,7 @@ iface_info_t *fd_to_iface(int fd)
 			return iface;
 	}
 
-	log(ERROR, "Could not find the desired interface according to fd %d", fd);
+	// log(ERROR, "Could not find the desired interface according to fd %d", fd);
 
 	return NULL;
 }
@@ -147,16 +147,16 @@ static void find_available_ifaces()
 	freeifaddrs(addrs);
 
 	if (instance->nifs == 0) {
-		log(ERROR, "could not find available interfaces.");
+		// log(ERROR, "could not find available interfaces.");
 		exit(1);
 	}
 
 	char dev_names[1024] = "";
 	iface_info_t *iface = NULL;
 	list_for_each_entry(iface, &instance->iface_list, list) {
-		sprintf(dev_names + strlen(dev_names), " %s", iface->name);
+		// sprintf(dev_names + strlen(dev_names), " %s", iface->name);
 	}
-	log(DEBUG, "find the following interfaces: %s.", dev_names);
+	// log(DEBUG, "find the following interfaces: %s.", dev_names);
 }
 
 void init_all_ifaces()

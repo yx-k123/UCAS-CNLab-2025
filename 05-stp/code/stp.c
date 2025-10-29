@@ -138,11 +138,104 @@ void *stp_timer_routine(void *arg)
 	return NULL;
 }
 
-static void stp_handle_config_packet(stp_t *stp, stp_port_t *p,
-		struct stp_config *config)
+static int stp_tuple_cmp(u64 r1, u32 c1, u64 s1, u16 p1,
+                         u64 r2, u32 c2, u64 s2, u16 p2)
 {
-	// TODO: handle config packet here
-	fprintf(stdout, "TODO: handle config packet here.\n");
+    if (r1 != r2) return (r1 < r2) ? -1 : 1;
+    if (c1 != c2) return (c1 < c2) ? -1 : 1;
+    if (s1 != s2) return (s1 < s2) ? -1 : 1;
+    if (p1 != p2) return (p1 < p2) ? -1 : 1;
+    return 0;
+}
+
+static void stp_recompute(stp_t *stp)
+{
+    // 1) 选根端口：只在“对端更优”的端口中选
+    stp_port_t *best_port = NULL;
+    u64 best_root = 0;
+    u32 best_cost = 0;
+    u64 best_sw = 0;
+    u16 best_pid = 0;
+
+    for (int i = 0; i < stp->nports; i++) {
+        stp_port_t *p = &stp->ports[i];
+        if (p->designated_switch == stp->switch_id) continue;
+
+        u64 r = p->designated_root;
+        u32 c = p->designated_cost + p->path_cost;
+        u64 s = p->designated_switch;
+        u16 pid = p->designated_port;
+
+        if (!best_port || stp_tuple_cmp(r, c, s, pid, best_root, best_cost, best_sw, best_pid) < 0) {
+            best_port = p;
+            best_root = r;
+            best_cost = c;
+            best_sw = s;
+            best_pid = pid;
+        }
+    }
+
+    // 2) 更新本桥的根信息
+    if (!best_port) {
+        stp->designated_root = stp->switch_id;
+        stp->root_path_cost = 0;
+        stp->root_port = NULL;
+    } else {
+        stp->designated_root = best_root;
+        stp->root_path_cost = best_cost;
+        stp->root_port = best_port;
+    }
+
+    // 3) 刷新各端口的 designated 信息
+    for (int i = 0; i < stp->nports; i++) {
+        stp_port_t *q = &stp->ports[i];
+
+        if (stp->root_port && q->port_id == stp->root_port->port_id)
+            continue;
+
+        u64 my_r = stp->designated_root;
+        u32 my_c = stp->root_path_cost;
+        u64 my_s = stp->switch_id;
+        u16 my_p = q->port_id;
+
+        if (stp_tuple_cmp(my_r, my_c, my_s, my_p,
+                          q->designated_root, q->designated_cost,
+                          q->designated_switch, q->designated_port) < 0) {
+            q->designated_root = my_r;
+            q->designated_cost = my_c;
+            q->designated_switch = my_s;
+            q->designated_port = my_p;
+        }
+    }
+}
+
+static void stp_handle_config_packet(stp_t *stp, stp_port_t *p,
+        struct stp_config *config)
+{
+    u64 recv_root_id = ntohll(config->root_id);
+    u32 recv_root_path_cost = ntohl(config->root_path_cost);
+    u64 recv_switch_id = ntohll(config->switch_id);
+    u16 recv_port_id = ntohs(config->port_id);
+
+    bool superior = stp_tuple_cmp(
+        recv_root_id, recv_root_path_cost, recv_switch_id, recv_port_id,
+        p->designated_root, p->designated_cost, p->designated_switch, p->designated_port
+    ) < 0;
+
+    if (superior) {
+        p->designated_root = recv_root_id;
+        p->designated_cost = recv_root_path_cost;
+        p->designated_switch = recv_switch_id;
+        p->designated_port = recv_port_id;
+
+        stp_recompute(stp);
+
+        stp_send_config(stp);
+    } else {
+        if (stp_port_is_designated(p)) {
+            stp_port_send_config(p);
+        }
+    }
 }
 
 static void *stp_dump_state(void *arg)
@@ -181,7 +274,7 @@ static void *stp_dump_state(void *arg)
 static void stp_handle_signal(int signal)
 {
 	if (signal == SIGTERM) {
-		log(DEBUG, "received SIGTERM, terminate this program.");
+		// log(DEBUG, "received SIGTERM, terminate this program.");
 		
 		pthread_t pid;
 		pthread_create(&pid, NULL, stp_dump_state, NULL);
@@ -260,10 +353,10 @@ void stp_port_handle_packet(stp_port_t *p, char *packet, int pkt_len)
 		stp_handle_config_packet(stp, p, (struct stp_config *)header);
 	}
 	else if (header->msg_type == STP_TYPE_TCN) {
-		log(ERROR, "TCN packet is not supported in this lab.");
+		// log(ERROR, "TCN packet is not supported in this lab.");
 	}
 	else {
-		log(ERROR, "received invalid STP packet.");
+		// log(ERROR, "received invalid STP packet.");
 	}
 
 	pthread_mutex_unlock(&stp->lock);
