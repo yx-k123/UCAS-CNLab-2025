@@ -119,7 +119,7 @@ def stop_iperf():
 def set_qdisc_algo(net, algo):
     algo_func_dict = {
             'taildrop': [],
-            'red': ['tc qdisc add dev r1-eth1 parent 5:1 handle 6: red limit 1000000 avpkt 1000'],
+            'red': ['tc qdisc add dev r1-eth1 parent 5:1 handle 6: red limit 1000000 avpkt 1000 min 300000 max 800000'],
             'codel': ['tc qdisc add dev r1-eth1 parent 5:1 handle 6: codel limit 1000']
             }
     if algo not in algo_func_dict.keys():
