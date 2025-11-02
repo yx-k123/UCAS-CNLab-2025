@@ -1,0 +1,208 @@
+% 这是中国科学院大学计算机科学与技术专业《计算机组成原理（研讨课）》使用的实验报告 Latex 模板
+% 本模板与 2024 年 2 月 Jun-xiong Ji 完成, 更改自由 Shing-Ho Lin 和 Jun-Xiong Ji 于 2022 年 9 月共同完成的基础物理实验模板
+% 如有任何问题, 请联系: jijunxoing21@mails.ucas.ac.cn
+% This is the LaTeX template for report of Experiment of Computer Organization and Design courses, based on its provided Word template. 
+% This template is completed on Febrary 2024, based on the joint collabration of Shing-Ho Lin and Junxiong Ji in September 2022. 
+% Adding numerous pictures and equations leads to unsatisfying experience in Word. Therefore LaTeX is better. 
+% Feel free to contact me via: jijunxoing21@mails.ucas.ac.cn
+
+\documentclass[11pt]{article}
+
+\usepackage[a4paper]{geometry}
+\geometry{left=2.0cm,right=2.0cm,top=2.5cm,bottom=2.5cm}
+
+\usepackage{ctex} % 支持中文的LaTeX宏包
+\usepackage{amsmath,amsfonts,graphicx,subfigure,amssymb,bm,amsthm,mathrsfs,mathtools,breqn} % 数学公式和符号的宏包集合
+\usepackage{algorithm,algorithmicx} % 算法和伪代码
+\usepackage[noend]{algpseudocode} % 算法和伪代码
+\usepackage{fancyhdr} % 自定义页眉页脚
+\usepackage[framemethod=TikZ]{mdframed} % 创建带边框的框架
+\usepackage{fontspec} % 字体设置
+\usepackage{adjustbox} % 调整盒子大小
+\usepackage{fontsize} % 设置字体大小
+\usepackage{tikz,xcolor} % 绘制图形和使用颜色
+\usepackage{multicol} % 多栏排版
+\usepackage{multirow} % 表格中合并单元格
+\usepackage{pdfpages} % 插入PDF文件
+\usepackage{listings} % 在文档中插入源代码
+\usepackage{wrapfig} % 文字绕排图片
+\usepackage{bigstrut,multirow,rotating} % 支持在表格中使用特殊命令
+\usepackage{booktabs} % 创建美观的表格
+\usepackage{circuitikz} % 绘制电路图
+\usepackage{zhnumber} % 中文序号（用于标题）
+\usepackage{tabularx} % 表格折行
+\usepackage{tikz}
+\usetikzlibrary{positioning} % 加载 positioning 库
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\lstset{
+  frame=tb,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  framerule=1pt,
+  rulecolor=\color{gray!35},
+  backgroundcolor=\color{gray!5},
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+}
+
+% 超链接支持 (一定要在大多数包之后, cleveref 之前)
+% colorlinks=true 使链接文字着色而不是加方框; hidelinks 可去掉颜色
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=magenta]{hyperref}
+
+% 轻松引用, 可以用\cref{}指令直接引用, 自动加前缀. 需要在 hyperref 之后加载
+% 例: 图片label为fig:1  => \cref{fig:1} -> Figure.1; \ref{fig:1} -> 1 (纯数字)
+\usepackage[capitalize]{cleveref}
+% \crefname{section}{Sec.}{Secs.}
+\Crefname{section}{Section}{Sections}
+\Crefname{table}{Table}{Tables}
+\crefname{table}{Table.}{Tabs.}
+
+% \setmainfont{Palatino Linotype.ttf}
+% \setCJKmainfont{SimHei.ttf}
+% \setCJKsansfont{Songti.ttf}
+% \setCJKmonofont{SimSun.ttf}
+\punctstyle{kaiming}
+% 偏好的几个字体, 可以根据需要自行加入字体ttf文件并调用
+
+\renewcommand{\emph}[1]{\begin{kaishu}#1\end{kaishu}}
+
+% 对 section 等环境的序号使用中文
+\renewcommand \thesection{\zhnum{section}、}
+\renewcommand \thesubsection{\arabic{section}.\arabic{subsection}}
+
+\tikzset{
+    link/.style={draw, thick, -stealth} % 定义 link 样式，包含绘制、粗线条和箭头
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%改这里可以修改实验报告表头的信息
+\newcommand{\name}{寇逸欣}
+\newcommand{\studentNum}{2023K8009922004}
+\newcommand{\major}{计算机科学与技术}
+\newcommand{\labNum}{06}
+\newcommand{\labName}{数据包队列实验}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\input{tex_file/head.tex}
+
+\section{实验内容}
+\begin{enumerate}
+    \item 根据PPT及自己的调研，了解bufferbloat以及TCP-Incast的成因。
+    \item 利用所给代码，复现bufferbloat，根据PPT要求绘图并且解释。
+    \item 利用所给代码，用RED，CoDel以及tail drop解决bufferbloat，根据PPT要求绘图并解释。
+\end{enumerate}
+
+\section{bufferBloat和TCP-Incast的成因}
+\subsection{BufferBloat问题的成因}
+BufferBloat问题产生的根本原因在于过大的缓冲区设置。TCP的拥塞控制机制依赖于丢包或者延迟的增加来降低发送速率，但是，由于过大的缓冲区，即使链路饱和
+缓冲区也不会立即丢包，导致发送方没有获取到这个信息，从而继续以高速度发送数据包，最终导致网络延迟增加和吞吐量下降。而又因为延迟的增加TCP没有及时感知，
+造成了恶性循环：链路饱和->缓冲区变满->延迟增加->TCP反应迟缓，降低发送速率吧->队列排空->TCP又开始加速发送。
+
+\subsection{TCP-Incast问题的成因}
+TCP-Incast的成因主要是由于多个发送方同时向一个接收方发送大量数据包，导致接收方的缓冲区迅速填满，从而引发丢包和重传。具体来说，当一个客户端发出请求时，
+可能会有多个服务器同时响应，导致大量数据包在短时间内涌入接收方的缓冲区。如果缓冲区容量不足以容纳这些数据包，就会发生丢包（几乎每个发送方都会丢包）。
+由于超时重传机制所需要的时间较长，会导致长时间的链路空闲，链路利用率低，吞吐量急剧下降。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/tcp_incast.png}
+    \caption{TCP-Incast示意图}
+\end{figure}
+
+\section{重现bufferbloat问题}
+先选取100长度的队列测量h1的拥塞窗口值(cwnd)、r1-eth1的队列长度(qlen)、h1与h2间的往返延迟(rtt)，结果如下图所示：
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/plots_100.png}
+    \caption{Bufferbloat现象重现}
+\end{figure}
+
+可以看到，当r1-eth1的队列长度(qlen)达到峰值的时候，h1的拥塞窗口值(cwnd)达到了最大值，h1与h2间的往返延迟(rtt)也随之增加，且三者的变化趋势基本一致。这表明在网络中出现了Bufferbloat现象。
+
+接下来选取20，100，200长度的队列进行试验，对cwnd，qlen，rtt分别进行进一步的分析。
+\subsection{cwnd分析}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/cwnd_compare.png}
+    \caption{不同队列长度下cwnd变化对比}
+\end{figure}
+
+拥塞窗口值(cwnd)反映了TCP连接中允许未确认数据包的最大数量。通过观察上图，可以发现，在实验开始时，三种不同队列长度下的cwnd值都迅速上升，分别到达峰值。其中，
+队列长度越长，到达峰值的时间越晚，峰值也越高，大约为队列长度的5-6倍。接着，由于队列拥塞，出现丢包现象，发送方接收到信号，降低发送速率，
+cwnd值迅速下降；当网络拥塞缓解后，cwnd值开始恢复。队列越长，下降的幅度越大，且恢复的时间越长。随后进入一个周期性的波动阶段，cwnd值在一定范围内上下波动，峰值约为
+队列长度的两倍，谷值略低于队列长度。
+
+
+\subsection{qlen分析}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/qlen_compare.png}
+    \caption{不同队列长度下qlen变化对比}
+\end{figure}
+
+队列长度(qlen)表示路由器或交换机中等待处理的数据包数量。通过观察上图，可以发现，在实验开始时，三种不同队列长度下的qlen值都迅速上升，分别到达峰值，峰值大小即为队列长度。
+随后，由于队列拥塞，出现丢包现象，路由器或交换机开始丢弃数据包，qlen值迅速下降，大约减少至峰值的一半左右。接着，随着网络拥塞的缓解，qlen值开始恢复，再次上升至峰值，进入一个
+新的周期。可以看到，队列长度越长，qlen值的波动幅度越大，且周期越长。
+
+\subsection{rtt分析}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/rtt_compare.png}
+    \caption{不同队列长度下rtt变化对比}
+\end{figure}
+
+往返延迟(rtt)表示数据包从发送方到接收方再返回发送方所需的时间。通过观察上图，可以发现，在实验开始时，由于队列迅速填满，rtt值迅速上升，达到峰值。随后，由于队列拥塞，
+发送速率降低，队列逐渐排空，rtt值迅速下降。接着，随着网络拥塞的缓解，rtt值开始恢复，再次上升至峰值，进入一个新的周期。可以看到，队列长度越长，rtt值在整个周期中都普遍高于
+其他队列长度，且波动周期越长。这说明，较长的队列会导致更严重的bufferbloat现象，增加网络延迟。
+
+发现rtt图像有很多毛刺，可能是由于测量误差或者模拟网络环境的影响。
+
+\subsection{iperf吞吐率分析}
+\begin{itemize}
+    \item 队列长度为20时，平均带宽约为7.94 Mbits/sec，峰值带宽22.6 Mbits/sec，最低带宽929 Kbits/sec。
+    \item 队列长度为100时，平均带宽约为7.40 Mbits/sec，峰值带宽46.1 Mbits/sec，最低带宽120 Kbits/sec。
+    \item 队列长度为200时，平均带宽约为7.44 Mbits/sec，峰值带宽42.6 Mbits/sec，最低带宽85.1 Kbits/sec。
+\end{itemize}
+
+可以看到，随着队列长度的增加，平均带宽变化不大，但峰值带宽有所提升，而最低带宽则显著下降。这表明较长的队列会导致更严重的bufferbloat现象，影响网络性能。
+
+\section{解决 BufferBloat 问题}
+利用 RED，CoDel 以及 Tail Drop 三种不同的队列管理算法分别进行测试，结果如下所示：
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/mitigation_delay.png}
+    \caption{不同队列管理算法下的吞吐率变化对比}
+\end{figure}
+
+可以看到，三种不同的队列管理算法的效果优劣顺序为：CoDel > RED > Tail Drop。在缓解 BufferBloat 问题方面，CoDel 表现最佳，能够有效降低网络延迟并提高吞吐率；
+RED 次之，也能在一定程度上缓解 BufferBloat 问题；而 Tail Drop 效果最差，无法有效解决 BufferBloat 问题。这是因为：
+
+\begin{itemize}
+    \item Tail Drop 是一种简单的队列管理算法，他仅仅在队列满时丢弃数据包，无法主动预防拥塞，因此难以缓解 BufferBloat 问题。
+    \item RED 是一种主动队列管理算法，通过在队列达到一定阈值时随机丢弃数据包，来预防拥塞的发生，从而降低延迟并提高吞吐率。
+    因此，相较于 Tail Drop，RED 能够更有效地缓解 BufferBloat 问题。
+    \item CoDel 是一种先进的主动队列管理算法，通过动态调整丢包概率来控制队列长度，能够更精确地预防拥塞的发生，从而显著降低延迟并提高吞吐率。可以看出，
+    CoDel 在缓解 BufferBloat 问题方面表现最佳。
+\end{itemize}
+
+同时，我们发现图像中三种方法的峰值都会稳定维持一段时间，这是可能是因为TCP调整机制有一定的的时间延迟，导致在rtt迅速上升到达峰值后，
+TCP仍然维持较高的发送速率一段时间，直到感知到网络拥塞并调整发送速率，从而使得吞吐率在峰值处维持一段时间。
+
+在复现BufferBloat问题的实验中，我们发现tail drop算法的图像和标准结果有区别，体现在曲线一直出现“尖端”情况。这是仿真环境的差异导致的。在Mininet中，maxq参数实际上是一个模拟延迟和丢包的批处理大小，与真实的队列大小有区别，只是近似仿真。
+
+\end{document}
+

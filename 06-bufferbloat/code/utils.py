@@ -111,9 +111,11 @@ def start_iperf(net, duration):
     print('Start iperf ...')
     server = h2.popen('iperf -s -w 16m')
     client = h1.popen('iperf -c %s -t %d' % (h2.IP(), duration+ 5))
+    # h1.cmd('iperf -c %s -t %d -i 0.5 | tee iperf_200.txt &' % (h2.IP(), duration + 5))
 
 def stop_iperf():
     print('Kill iperf ...')
+    # os.system('pkill -9 -f iperf >/dev/null 2>&1 || true')
     Popen('pgrep -f iperf | xargs kill -9', shell=True).wait()
 
 def set_qdisc_algo(net, algo):
