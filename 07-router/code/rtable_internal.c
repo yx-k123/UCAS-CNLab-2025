@@ -1,4 +1,4 @@
-#include "rtable.h"
+#include "include/rtable.h"
 
 #include <stdio.h>
 #include <stdlib.h>
