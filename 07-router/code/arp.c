@@ -16,7 +16,8 @@
 void arp_send_request(iface_info_t *iface, u32 dst_ip)
 {
 	// fprintf(stderr, "TODO: send arp request when lookup failed in arpcache.\n");
-	char packet[sizeof(struct ether_header) + sizeof(struct ether_arp)];
+	log(DEBUG, "send arp request for ip %x\n", dst_ip);
+	char *packet = malloc(sizeof(struct ether_header) + sizeof(struct ether_arp));
 	struct ether_header *eh = (struct ether_header *)packet;
 	struct ether_arp *arp_hdr = (struct ether_arp *)(packet + sizeof(struct ether_header));
 	// fill ethernet header
@@ -33,7 +34,7 @@ void arp_send_request(iface_info_t *iface, u32 dst_ip)
 	arp_hdr->arp_spa = htonl(iface->ip); 								// sender ip
 	memset(arp_hdr->arp_tha, 0x00, ETH_ALEN); 							// target mac: unknown
 	arp_hdr->arp_tpa = htonl(dst_ip); 							// target ip
-	iface_send_packet(iface, packet, sizeof(packet)); 					// send packet
+	iface_send_packet(iface, packet, sizeof(struct ether_header) + sizeof(struct ether_arp)); 					// send packet
 }
 
 // send an arp reply packet: encapsulate an arp reply packet, send it out
@@ -41,7 +42,8 @@ void arp_send_request(iface_info_t *iface, u32 dst_ip)
 void arp_send_reply(iface_info_t *iface, struct ether_arp *req_hdr)
 {
 	// fprintf(stderr, "TODO: send arp reply when receiving arp request.\n");
-	char packet[sizeof(struct ether_header) + sizeof(struct ether_arp)];
+	log(DEBUG, "send arp reply to %x", ntohl(req_hdr->arp_spa));
+	char *packet = malloc(sizeof(struct ether_header) + sizeof(struct ether_arp));
 	struct ether_header *eh = (struct ether_header *)packet;
 	struct ether_arp *arp_hdr = (struct ether_arp *)(packet + sizeof(struct ether_header));
 	// fill ethernet header
@@ -58,12 +60,13 @@ void arp_send_reply(iface_info_t *iface, struct ether_arp *req_hdr)
 	arp_hdr->arp_spa = htonl(iface->ip);
 	memcpy(arp_hdr->arp_tha, req_hdr->arp_sha, ETH_ALEN);
 	arp_hdr->arp_tpa = req_hdr->arp_spa;
-	iface_send_packet(iface, packet, sizeof(packet));
+	iface_send_packet(iface, packet, sizeof(struct ether_header) + sizeof(struct ether_arp));
 }
 
 void handle_arp_packet(iface_info_t *iface, char *packet, int len)
 {
 	// fprintf(stderr, "TODO: process arp packet: arp request & arp reply.\n");
+	log(DEBUG, "handle arp packet\n");
 	if (len < sizeof(struct ether_header) + sizeof(struct ether_arp)) {
         return; 
     }
@@ -75,11 +78,13 @@ void handle_arp_packet(iface_info_t *iface, char *packet, int len)
 
 	if (op == ARPOP_REQUEST) {
 		if (tpa == iface->ip) {
+			log(DEBUG, "received arp request from %x", spa);
 			arpcache_insert(spa, arp_hdr->arp_sha);
 			arp_send_reply(iface, arp_hdr);
 		}
 	}
 	else if (op == ARPOP_REPLY) {
+		log(DEBUG, "received arp reply from %x", spa);
 		arpcache_insert(spa, arp_hdr->arp_sha);
 	}
 }

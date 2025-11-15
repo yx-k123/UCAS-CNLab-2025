@@ -2,6 +2,7 @@
 #include "include/arp.h"
 #include "include/ether.h"
 #include "include/icmp.h"
+#include "include/log.h"
 
 #include <pthread.h>
 #include <stdio.h>
@@ -64,6 +65,7 @@ int arpcache_lookup(u32 ip4, u8 mac[ETH_ALEN])
 	}
 
 	pthread_mutex_unlock(&arpcache.lock);	
+	log(DEBUG, "arp cache lookup failed for ip %x\n", ip4);
 	return 0;
 }
 
@@ -107,7 +109,7 @@ void arpcache_append_packet(iface_info_t *iface, u32 ip4, char *packet, int len)
 	list_add_tail(&new_pkt->list, &req_entry->cached_packets);
 
 	pthread_mutex_unlock(&arpcache.lock);
-
+	log(DEBUG, "append packet waiting for ip %x\n", ip4);
 	arp_send_request(iface, ip4);
 }
 
@@ -120,15 +122,13 @@ void arpcache_insert(u32 ip4, u8 mac[ETH_ALEN])
 	pthread_mutex_lock(&arpcache.lock);
 
 	// insert arp cache
-	struct arp_cache_entry *entry = (struct arp_cache_entry *)malloc(sizeof(struct arp_cache_entry));
-	entry->ip4 = ip4;
-	memcpy(entry->mac, mac, ETH_ALEN);
-	entry->valid = 1;
-	entry->added = time(NULL);
 	int inserted = 0;
 	for (int i = 0; i < MAX_ARP_SIZE; i++) {
 		if (!arpcache.entries[i].valid) {
-			arpcache.entries[i] = *entry;
+			arpcache.entries[i].ip4 = ip4;
+			memcpy(arpcache.entries[i].mac, mac, ETH_ALEN);
+			arpcache.entries[i].added = time(NULL);
+			arpcache.entries[i].valid = 1;
 			inserted = 1;
 			break;
 		}
@@ -136,9 +136,11 @@ void arpcache_insert(u32 ip4, u8 mac[ETH_ALEN])
 	if (!inserted) {
 		srand(time(NULL));
 		int idx = rand() % MAX_ARP_SIZE;
-		arpcache.entries[idx] = *entry;
+		arpcache.entries[idx].ip4 = ip4;
+		memcpy(arpcache.entries[idx].mac, mac, ETH_ALEN);
+		arpcache.entries[idx].added = time(NULL);
+		arpcache.entries[idx].valid = 1;
 	}
-	free(entry);
 
 	// send pending packets
 	struct arp_req *req_entry = NULL, *req_q;
@@ -150,7 +152,7 @@ void arpcache_insert(u32 ip4, u8 mac[ETH_ALEN])
 				memcpy(eh->ether_dhost, mac, ETH_ALEN);
 				iface_send_packet(req_entry->iface, pkt_entry->packet, pkt_entry->len);
 				list_delete_entry(&pkt_entry->list);
-				free(pkt_entry->packet);
+				// free(pkt_entry->packet);
 				free(pkt_entry);
 			}
 			list_delete_entry(&req_entry->list);
@@ -159,6 +161,8 @@ void arpcache_insert(u32 ip4, u8 mac[ETH_ALEN])
 	}
 
 	pthread_mutex_unlock(&arpcache.lock);
+	log(DEBUG, "insert ip %x to mac %02x:%02x:%02x:%02x:%02x:%02x\n", 
+			ip4, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
 // sweep arpcache periodically
@@ -193,10 +197,7 @@ void *arpcache_sweep(void *arg)
 					// send icmp host unreachable for each pending packet
 					struct cached_pkt *pkt_entry = NULL, *pkt_q;
 					list_for_each_entry_safe(pkt_entry, pkt_q, &req_entry->cached_packets, list) {
-						char *ip_packet = pkt_entry->packet + sizeof(struct ether_header);
-						int ip_packet_len = pkt_entry->len - sizeof(struct ether_header);
-
-						icmp_send_packet(ip_packet, ip_packet_len, ICMP_DEST_UNREACH, ICMP_HOST_UNREACH);
+						icmp_send_packet(pkt_entry->packet, pkt_entry->len, ICMP_DEST_UNREACH, ICMP_HOST_UNREACH);
 
 						list_delete_entry(&pkt_entry->list);
 						free(pkt_entry->packet);
@@ -216,6 +217,5 @@ void *arpcache_sweep(void *arg)
 
 		pthread_mutex_unlock(&arpcache.lock);
 	}
-
 	return NULL;
 }
