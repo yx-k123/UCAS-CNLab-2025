@@ -69,5 +69,6 @@ if __name__ == '__main__':
     r1.cmd('./scripts/disable_ipv6.sh')
 
     net.start()
+    r1.cmd('./router > log/router_output.log 2>&1 &')
     CLI(net)
     net.stop()
