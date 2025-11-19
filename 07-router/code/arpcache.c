@@ -197,8 +197,9 @@ void *arpcache_sweep(void *arg)
 					// send icmp host unreachable for each pending packet
 					struct cached_pkt *pkt_entry = NULL, *pkt_q;
 					list_for_each_entry_safe(pkt_entry, pkt_q, &req_entry->cached_packets, list) {
+						pthread_mutex_unlock(&(arpcache.lock));						
 						icmp_send_packet(pkt_entry->packet, pkt_entry->len, ICMP_DEST_UNREACH, ICMP_HOST_UNREACH);
-
+						pthread_mutex_lock(&(arpcache.lock));
 						list_delete_entry(&pkt_entry->list);
 						free(pkt_entry->packet);
 						free(pkt_entry);
