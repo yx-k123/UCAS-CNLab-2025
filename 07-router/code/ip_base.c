@@ -55,17 +55,17 @@ void ip_send_packet(char *packet, int len)
 	u32 destip = ntohl(ip_hdr->daddr);
 	rt_entry_t *entry = longest_prefix_match(destip);
 	if (!entry) {
-        log(ERROR, "no route for " IP_FMT ", drop packet\n", HOST_IP_FMT_STR(destip));
+        // log(ERROR, "no route for " IP_FMT ", drop packet\n", HOST_IP_FMT_STR(destip));
         free(packet);
         return;
     }
 
     if (entry->gw) {
-        log(DEBUG, "send ip packet to gateway " IP_FMT "\n", HOST_IP_FMT_STR(entry->gw));
+        // log(DEBUG, "send ip packet to gateway " IP_FMT "\n", HOST_IP_FMT_STR(entry->gw));
         iface_send_packet_by_arp(entry->iface, entry->gw, packet, len);
     } else {
-        log(DEBUG, "send ip packet to destination " IP_FMT "\n", HOST_IP_FMT_STR(destip));
-        log(DEBUG, "entry iface: %s\n", entry->iface->name);
+        // log(DEBUG, "send ip packet to destination " IP_FMT "\n", HOST_IP_FMT_STR(destip));
+        // log(DEBUG, "entry iface: %s\n", entry->iface->name);
         iface_send_packet_by_arp(entry->iface, destip, packet, len);
     }
 }

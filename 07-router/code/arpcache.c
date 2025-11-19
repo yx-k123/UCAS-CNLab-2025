@@ -65,7 +65,7 @@ int arpcache_lookup(u32 ip4, u8 mac[ETH_ALEN])
 	}
 
 	pthread_mutex_unlock(&arpcache.lock);	
-	log(DEBUG, "arp cache lookup failed for ip %x\n", ip4);
+	// log(DEBUG, "arp cache lookup failed for ip %x\n", ip4);
 	return 0;
 }
 
@@ -109,7 +109,7 @@ void arpcache_append_packet(iface_info_t *iface, u32 ip4, char *packet, int len)
 	list_add_tail(&new_pkt->list, &req_entry->cached_packets);
 
 	pthread_mutex_unlock(&arpcache.lock);
-	log(DEBUG, "append packet waiting for ip %x\n", ip4);
+	// log(DEBUG, "append packet waiting for ip %x\n", ip4);
 	arp_send_request(iface, ip4);
 }
 
@@ -161,8 +161,8 @@ void arpcache_insert(u32 ip4, u8 mac[ETH_ALEN])
 	}
 
 	pthread_mutex_unlock(&arpcache.lock);
-	log(DEBUG, "insert ip %x to mac %02x:%02x:%02x:%02x:%02x:%02x\n", 
-			ip4, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	// log(DEBUG, "insert ip %x to mac %02x:%02x:%02x:%02x:%02x:%02x\n", 
+	// 		ip4, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
 // sweep arpcache periodically

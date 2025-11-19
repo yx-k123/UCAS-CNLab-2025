@@ -21,6 +21,7 @@ void icmp_send_packet(const char *in_pkt, int len, u8 type, u8 code)
 	}else{
 		packet_len = ETHER_HDR_SIZE + IP_BASE_HDR_SIZE + ICMP_HDR_SIZE + IP_HDR_SIZE(in_ip_hdr) + 8;
 	}
+
 	char *send_pkt = malloc(packet_len * sizeof(char));
 	struct ether_header *eh = (struct ether_header *) send_pkt;
 	struct iphdr *iph = packet_to_ip_hdr(send_pkt);
@@ -29,7 +30,7 @@ void icmp_send_packet(const char *in_pkt, int len, u8 type, u8 code)
 
 	rt_entry_t *entry = longest_prefix_match(ntohl(in_ip_hdr->saddr));
 	ip_init_hdr(iph, entry->iface->ip, ntohl(in_ip_hdr->saddr),packet_len - ETHER_HDR_SIZE, 1);
-    
+
 	icmph->code = code;
 	icmph->type = type;
 
@@ -41,19 +42,19 @@ void icmp_send_packet(const char *in_pkt, int len, u8 type, u8 code)
 	}
 	icmph->checksum = icmp_checksum(icmph, packet_len - ETHER_HDR_SIZE - IP_BASE_HDR_SIZE);
 
-    	FILE *fp = fopen("./log/packets.txt", "w");
-	if (fp) {
-		unsigned char *buf = (unsigned char *)send_pkt;
-		for (int i = 0; i < packet_len; i++) {
-			fprintf(fp, "%02x", buf[i]);
-			if ((i + 1) % 16 == 0)
-				fprintf(fp, "\n");
-			else
-				fprintf(fp, " ");
-		}
-		fprintf(fp, "\n\n");
-		fclose(fp);
-	}
+    // FILE *fp = fopen("./log/packets.txt", "w");
+	// if (fp) {
+	// 	unsigned char *buf = (unsigned char *)send_pkt;
+	// 	for (int i = 0; i < packet_len; i++) {
+	// 		fprintf(fp, "%02x", buf[i]);
+	// 		if ((i + 1) % 16 == 0)
+	// 			fprintf(fp, "\n");
+	// 		else
+	// 			fprintf(fp, " ");
+	// 	}
+	// 	fprintf(fp, "\n\n");
+	// 	fclose(fp);
+	// }
 
 	ip_send_packet(send_pkt, packet_len);
 }
