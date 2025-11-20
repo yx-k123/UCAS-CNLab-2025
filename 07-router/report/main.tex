@@ -1,0 +1,587 @@
+% 这是中国科学院大学计算机科学与技术专业《计算机组成原理（研讨课）》使用的实验报告 Latex 模板
+% 本模板与 2024 年 2 月 Jun-xiong Ji 完成, 更改自由 Shing-Ho Lin 和 Jun-Xiong Ji 于 2022 年 9 月共同完成的基础物理实验模板
+% 如有任何问题, 请联系: jijunxoing21@mails.ucas.ac.cn
+% This is the LaTeX template for report of Experiment of Computer Organization and Design courses, based on its provided Word template. 
+% This template is completed on Febrary 2024, based on the joint collabration of Shing-Ho Lin and Junxiong Ji in September 2022. 
+% Adding numerous pictures and equations leads to unsatisfying experience in Word. Therefore LaTeX is better. 
+% Feel free to contact me via: jijunxoing21@mails.ucas.ac.cn
+
+\documentclass[11pt]{article}
+
+\usepackage[a4paper]{geometry}
+\geometry{left=2.0cm,right=2.0cm,top=2.5cm,bottom=2.5cm}
+
+\usepackage{ctex} % 支持中文的LaTeX宏包
+\usepackage{amsmath,amsfonts,graphicx,subfigure,amssymb,bm,amsthm,mathrsfs,mathtools,breqn} % 数学公式和符号的宏包集合
+\usepackage{algorithm,algorithmicx} % 算法和伪代码
+\usepackage[noend]{algpseudocode} % 算法和伪代码
+\usepackage{fancyhdr} % 自定义页眉页脚
+\usepackage[framemethod=TikZ]{mdframed} % 创建带边框的框架
+\usepackage{fontspec} % 字体设置
+\usepackage{adjustbox} % 调整盒子大小
+\usepackage{fontsize} % 设置字体大小
+\usepackage{tikz,xcolor} % 绘制图形和使用颜色
+\usepackage{multicol} % 多栏排版
+\usepackage{multirow} % 表格中合并单元格
+\usepackage{pdfpages} % 插入PDF文件
+\usepackage{listings} % 在文档中插入源代码
+\usepackage{wrapfig} % 文字绕排图片
+\usepackage{bigstrut,multirow,rotating} % 支持在表格中使用特殊命令
+\usepackage{booktabs} % 创建美观的表格
+\usepackage{circuitikz} % 绘制电路图
+\usepackage{zhnumber} % 中文序号（用于标题）
+\usepackage{tabularx} % 表格折行
+\usepackage{tikz}
+\usetikzlibrary{positioning} % 加载 positioning 库
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\lstset{
+  frame=tb,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  framerule=1pt,
+  rulecolor=\color{gray!35},
+  backgroundcolor=\color{gray!5},
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+}
+
+% 超链接支持 (一定要在大多数包之后, cleveref 之前)
+% colorlinks=true 使链接文字着色而不是加方框; hidelinks 可去掉颜色
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=magenta]{hyperref}
+
+% 轻松引用, 可以用\cref{}指令直接引用, 自动加前缀. 需要在 hyperref 之后加载
+% 例: 图片label为fig:1  => \cref{fig:1} -> Figure.1; \ref{fig:1} -> 1 (纯数字)
+\usepackage[capitalize]{cleveref}
+% \crefname{section}{Sec.}{Secs.}
+\Crefname{section}{Section}{Sections}
+\Crefname{table}{Table}{Tables}
+\crefname{table}{Table.}{Tabs.}
+
+% \setmainfont{Palatino Linotype.ttf}
+% \setCJKmainfont{SimHei.ttf}
+% \setCJKsansfont{Songti.ttf}
+% \setCJKmonofont{SimSun.ttf}
+\punctstyle{kaiming}
+% 偏好的几个字体, 可以根据需要自行加入字体ttf文件并调用
+
+\renewcommand{\emph}[1]{\begin{kaishu}#1\end{kaishu}}
+
+% 对 section 等环境的序号使用中文
+\renewcommand \thesection{\zhnum{section}、}
+\renewcommand \thesubsection{\arabic{section}.\arabic{subsection}}
+
+\tikzset{
+    link/.style={draw, thick, -stealth} % 定义 link 样式，包含绘制、粗线条和箭头
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%改这里可以修改实验报告表头的信息
+\newcommand{\name}{寇逸欣}
+\newcommand{\studentNum}{2023K8009922004}
+\newcommand{\major}{计算机科学与技术}
+\newcommand{\labNum}{07}
+\newcommand{\labName}{路由器转发实验}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\input{tex_file/head.tex}
+
+\section{实验内容}
+\begin{enumerate}
+    \item 基于现有框架，实现路由器转发机制。
+    \item 在PPT的星型拓扑(h1-r1,h2-r1,h3-r1)中使用ping验证并返回正确内容，3个ping通+host unreach+net unreach，共5个测试
+    \item 自己编写多跳拓扑并自行配置，见PPT(h1-r1-r2-h2)，在其中使用ping和traceroute验证，共2个测试。
+\end{enumerate}
+
+\section{实验流程}
+\subsection{处理ip数据包(包括转发)}
+如果接收到的数据包是ICMP echo请求，而且目标地址和当前接口的IP地址相同，则发送ICMP echo回复；否则，进行数据包转发，把
+数据包发送到下一跳。在进行转发的时候，需要进行最长前缀匹配，找到下一跳的路由条目。如果gw是0则说明目的地址在同一网段，下一跳地址即为目的地址，否则下一跳地址为gw。
+如果找不到匹配的路由条目，则发送ICMP目的地不可达消息；如果TTL值减1后为0，则发送ICMP时间超过消息；否则，更新IP头的校验和，并通过ARP协议将数据包发送到下一跳。
+同时，把RTT值减1，并重新计算校验和，如果RTT值为0，则发送ICMP时间超过消息。
+
+注意，解析dest_ip后要使用ntohl函数将网络字节序转换为主机字节序，以确保正确的比较和处理。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/handle_ip_packet.png}
+    \caption{传递过程示例}
+\end{figure}
+\begin{lstlisting}[language=C]
+void handle_ip_packet(iface_info_t *iface, char *packet, int len)
+{
+	// fprintf(stderr, "TODO: handle ip packet.\n");
+	struct iphdr *ip_hdr = packet_to_ip_hdr(packet);
+	u32 dest_ip = ntohl(ip_hdr->daddr);
+	u32 iface_ip = iface->ip;
+	if (dest_ip == iface_ip) {
+		if (ip_hdr->protocol == IPPROTO_ICMP) {
+			struct icmphdr *icmp_hdr = (struct icmphdr *)IP_DATA(ip_hdr);
+			if (icmp_hdr->type == ICMP_ECHOREQUEST) {
+				icmp_send_packet(packet, len, ICMP_ECHOREPLY, 0);
+			}
+		} 
+	} else {
+		// forward the packet
+		rt_entry_t *entry = longest_prefix_match(dest_ip);
+		if (entry == NULL) {
+			icmp_send_packet(packet, len, ICMP_DEST_UNREACH, ICMP_NET_UNREACH);
+		} else {
+			if (--ip_hdr->ttl == 0) {
+				icmp_send_packet(packet, len, ICMP_TIME_EXCEEDED, ICMP_EXC_TTL);
+			} else {
+				u32 nxt_hop = entry->gw == 0 ? dest_ip : entry->gw;
+				ip_hdr->checksum = ip_checksum(ip_hdr);
+				iface_send_packet_by_arp(entry->iface, nxt_hop, packet, len);
+			}
+		}
+	}
+}
+\end{lstlisting}
+
+\subsection{IP前缀查找和发送IP数据包}
+对于最长前缀匹配，(dst_ip \& mask) == (dest \& mask)，且掩码长度最长(mask值最大)的路由条目即为匹配结果。
+\begin{lstlisting}[language=C]
+rt_entry_t *longest_prefix_match(u32 dst)
+{
+	rt_entry_t *entry = NULL;
+	rt_entry_t *best_entry = NULL;
+	u32 max_mask = 0;
+	list_for_each_entry(entry, &rtable, list) {
+		if ((dst & entry->mask) == (entry->dest & entry->mask)) {
+			if (entry->mask > max_mask) {
+				max_mask = entry->mask;
+				best_entry = entry;
+			}
+		}
+	}
+	return best_entry;
+}
+\end{lstlisting}
+
+对于IP数据包的发送，首先要进行最长前缀匹配寻找下一跳的路由条目，如果gw不为0，则下一跳地址为gw，否则为目的地址dest_ip。
+\begin{lstlisting}[language=C]
+void ip_send_packet(char *packet, int len)
+{
+	struct iphdr *ip_hdr = packet_to_ip_hdr(packet);
+	u32 destip = ntohl(ip_hdr->daddr);
+	rt_entry_t *entry = longest_prefix_match(destip);
+  if (entry->gw) {
+    iface_send_packet_by_arp(entry->iface, entry->gw, packet, len);
+  } else {
+    iface_send_packet_by_arp(entry->iface, destip, packet, len);
+  }
+}
+\end{lstlisting}
+
+\subsection{发送ICMP数据包}
+首先，解析输入的IP数据包，获取目的IP和源IP，切换为主机字节序。然后根据ICMP的类型确定数据包的长度。如果是ICMP应答，则长度和
+输入的数据包相同，如果是目的不可达或者超时，则需要构造一个新的数据包，长度为以太网头+IP头+ICMP头+原始IP头+8字节数据。
+接着，分配内存用于发送数据包，并初始化以太网头和IP头。以太网头的类型字段设置为IP协议类型。
+然后，初始化IP头，源地址为当前接口的IP地址，目的地址为输入数据包的源地址，长度为数据包总长度减去以太网头长度，协议字段设置为ICMP。
+接下来，设置ICMP头的类型和代码字段。如果是ICMP应答，则将输入数据包的ICMP数据部分复制到发送数据包中；如果是目的不可
+达或者超时，则将输入数据包的IP头和前8字节数据复制到发送数据包中，并在ICMP数据部分填充4个字节的0。
+最后，计算ICMP头的校验和，并调用ip_send_packet函数发送数据包。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/icmp.png}
+    \caption{ICMP协议格式}
+\end{figure}
+
+\begin{lstlisting}[language=C]
+void icmp_send_packet(const char *in_pkt, int len, u8 type, u8 code)
+{
+	struct iphdr* in_ip_hdr = packet_to_ip_hdr(in_pkt);
+	int packet_len;
+	if(type == ICMP_ECHOREPLY){
+		packet_len = len;
+	}else{
+		packet_len = ETHER_HDR_SIZE + IP_BASE_HDR_SIZE + ICMP_HDR_SIZE + IP_HDR_SIZE(in_ip_hdr) + 8;
+	}
+
+	char *send_pkt = malloc(packet_len * sizeof(char));
+	struct ether_header *eh = (struct ether_header *) send_pkt;
+	struct iphdr *iph = packet_to_ip_hdr(send_pkt);
+	struct icmphdr *icmph = (struct icmphdr *)(send_pkt + ETHER_HDR_SIZE + IP_BASE_HDR_SIZE);
+	eh->ether_type = htons(ETH_P_IP);
+
+	rt_entry_t *entry = longest_prefix_match(ntohl(in_ip_hdr->saddr));
+	ip_init_hdr(iph, entry->iface->ip, ntohl(in_ip_hdr->saddr),packet_len - ETHER_HDR_SIZE, 1);
+
+	icmph->code = code;
+	icmph->type = type;
+
+	if(type == 0){
+		memcpy(send_pkt + ETHER_HDR_SIZE + IP_HDR_SIZE(iph) + 4, in_pkt + ETHER_HDR_SIZE + IP_HDR_SIZE(in_ip_hdr) + 4, packet_len - (ETHER_HDR_SIZE + IP_HDR_SIZE(in_ip_hdr) + 4));
+	}else{
+		memset(send_pkt + ETHER_HDR_SIZE + IP_HDR_SIZE(iph) + 4, 0, 4);
+		memcpy(send_pkt + ETHER_HDR_SIZE + IP_HDR_SIZE(iph) + 4 + 4, in_ip_hdr, IP_HDR_SIZE(in_ip_hdr) + 8);
+	}
+	icmph->checksum = icmp_checksum(icmph, packet_len - ETHER_HDR_SIZE - IP_BASE_HDR_SIZE);
+
+	ip_send_packet(send_pkt, packet_len);
+}
+\end{lstlisting}
+
+\subsection{ARP缓存相关操作}
+ARP缓存操作有查询，暂存，插入和老化四个部分。
+
+对于查询，遍历ARP缓存链表，查找与输入IP地址匹配的ARP缓存项，如果找到则将对应的MAC地址复制到输出参数中，并返回1表示成功；如果未找到则返回0表示失败。
+\begin{lstlisting}[language=C]
+int arpcache_lookup(u32 ip4, u8 mac[ETH_ALEN])
+{
+	pthread_mutex_lock(&arpcache.lock);
+	for (int i = 0; i < MAX_ARP_SIZE; i++) {
+		if (arpcache.entries[i].valid && arpcache.entries[i].ip4 == ip4) {
+			memcpy(mac, arpcache.entries[i].mac, ETH_ALEN);
+			pthread_mutex_unlock(&arpcache.lock);
+			return 1;
+		}
+	}
+
+	pthread_mutex_unlock(&arpcache.lock);	
+	return 0;
+}
+\end{lstlisting}
+
+对于暂存，首先，检查是否已经存在相同IP地址的ARP请求项，如果存在则将新的数据包添加到该请求项的等待队列中，并返回；如果不存在，则创建一个新的ARP请求项，
+将数据包添加到等待队列中，并将该请求项添加到ARP请求链表中。
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{fig/arp_req_list.png}
+	\caption{请求链表}
+\end{figure}
+
+\begin{lstlisting}[language=C]
+void arpcache_append_packet(iface_info_t *iface, u32 ip4, char *packet, int len)
+{
+	pthread_mutex_lock(&arpcache.lock);
+	struct arp_req *req_entry = NULL;
+	list_for_each_entry(req_entry, &arpcache.req_list, list) {
+		if (req_entry->ip4 == ip4 && req_entry->iface == iface) {
+			struct cached_pkt *new_pkt = (struct cached_pkt *)malloc(sizeof(struct cached_pkt));
+			new_pkt->packet = (char *)malloc(len);
+			memcpy(new_pkt->packet, packet, len);
+			new_pkt->len = len;
+			list_add_tail(&new_pkt->list, &req_entry->cached_packets);
+			pthread_mutex_unlock(&arpcache.lock);
+			return;
+		}
+  	}
+
+	// not found, create a new arp_req entry
+	req_entry = (struct arp_req *)malloc(sizeof(struct arp_req));
+	req_entry->iface = iface;
+	req_entry->ip4 = ip4;
+	req_entry->sent = time(NULL);
+	req_entry->retries = 0;
+	init_list_head(&req_entry->cached_packets);
+	list_add_tail(&req_entry->list, &arpcache.req_list);
+
+	struct cached_pkt *new_pkt = (struct cached_pkt *)malloc(sizeof(struct cached_pkt));
+	new_pkt->packet = (char *)malloc(len);
+	memcpy(new_pkt->packet, packet, len);
+	new_pkt->len = len;
+	list_add_tail(&new_pkt->list, &req_entry->cached_packets);
+
+	pthread_mutex_unlock(&arpcache.lock);
+	arp_send_request(iface, ip4);
+}
+\end{lstlisting}
+
+对于插入，查找一个空闲的缓存项，将新的IP地址和MAC地址存入该缓存项，并设置其为有效状态；如果没有空闲的缓存项，则随机选择一个缓存项进行替换。然后
+发送所有等待该IP地址的ARP请求项中的数据包，并删除对应的 ARP 请求条目。
+
+\begin{lstlisting}[language=C]
+void arpcache_insert(u32 ip4, u8 mac[ETH_ALEN])
+{
+	pthread_mutex_lock(&arpcache.lock);
+
+	// insert arp cache
+	int inserted = 0;
+	for (int i = 0; i < MAX_ARP_SIZE; i++) {
+		if (!arpcache.entries[i].valid) {
+			arpcache.entries[i].ip4 = ip4;
+			memcpy(arpcache.entries[i].mac, mac, ETH_ALEN);
+			arpcache.entries[i].added = time(NULL);
+			arpcache.entries[i].valid = 1;
+			inserted = 1;
+			break;
+		}
+	}
+	if (!inserted) {
+		srand(time(NULL));
+		int idx = rand() % MAX_ARP_SIZE;
+		arpcache.entries[idx].ip4 = ip4;
+		memcpy(arpcache.entries[idx].mac, mac, ETH_ALEN);
+		arpcache.entries[idx].added = time(NULL);
+		arpcache.entries[idx].valid = 1;
+	}
+
+	// send pending packets
+	struct arp_req *req_entry = NULL, *req_q;
+	list_for_each_entry_safe(req_entry, req_q, &arpcache.req_list, list) {
+		if (req_entry->ip4 == ip4) {
+			struct cached_pkt *pkt_entry = NULL, *pkt_q;
+			list_for_each_entry_safe(pkt_entry, pkt_q, &req_entry->cached_packets, list) {
+				struct ether_header *eh = (struct ether_header *)pkt_entry->packet;
+				memcpy(eh->ether_dhost, mac, ETH_ALEN);
+				iface_send_packet(req_entry->iface, pkt_entry->packet, pkt_entry->len);
+				list_delete_entry(&pkt_entry->list);
+				// free(pkt_entry->packet);
+				free(pkt_entry);
+			}
+			list_delete_entry(&req_entry->list);
+			free(req_entry);
+		}
+	}
+
+	pthread_mutex_unlock(&arpcache.lock);
+}
+\end{lstlisting}
+
+最后还要是实现一个arpcache\_sweep函数，用于老化ARP缓存项和重发ARP请求。该函数每秒钟执行一次，遍历ARP缓存项，如果存在条目超过设定时间
+则标记为无效。同时，遍历请求链表，如果请求项发送时间超过1秒且重试次数小于5次，则重新发送ARP请求并更新发送时间和重试次数；
+如果重试次数达到5次，则发送ICMP目的地不可达消息，并删除该请求项。
+\begin{lstlisting}[language=C]
+void *arpcache_sweep(void *arg) 
+{
+	while (1) {
+		sleep(1);
+		pthread_mutex_lock(&arpcache.lock);
+		time_t now = time(NULL);
+		
+		// sweep arp cache entries
+		for (int i = 0; i < MAX_ARP_SIZE; i++) {
+			if (arpcache.entries[i].valid && now - arpcache.entries[i].added > ARP_ENTRY_TIMEOUT) {
+				arpcache.entries[i].valid = 0;
+			}
+		}
+
+		// sweep arp requests
+		struct arp_req *req_entry = NULL, *req_q;
+		list_for_each_entry_safe(req_entry, req_q, &arpcache.req_list, list) {
+			if (now - req_entry->sent >= 1) {
+				if (req_entry->retries >= ARP_REQUEST_MAX_RETRIES) {
+					// send icmp host unreachable for each pending packet
+					struct cached_pkt *pkt_entry = NULL, *pkt_q;
+					list_for_each_entry_safe(pkt_entry, pkt_q, &req_entry->cached_packets, list) {
+						pthread_mutex_unlock(&(arpcache.lock));						
+						icmp_send_packet(pkt_entry->packet, pkt_entry->len, ICMP_DEST_UNREACH, ICMP_HOST_UNREACH);
+						pthread_mutex_lock(&(arpcache.lock));
+						list_delete_entry(&pkt_entry->list);
+						free(pkt_entry->packet);
+						free(pkt_entry);
+					}
+					// delete this arp_req entry
+					list_delete_entry(&req_entry->list);
+					free(req_entry);
+				} else {
+					// resend arp request
+					arp_send_request(req_entry->iface, req_entry->ip4);
+					req_entry->sent = now;
+					req_entry->retries += 1;
+				}
+			}
+		}
+
+		pthread_mutex_unlock(&arpcache.lock);
+	}
+	return NULL;
+}
+\end{lstlisting}
+
+注意，以上几个函数都需要加锁以确保线程安全。这就引出了一个问题，即在arpcache\_sweep函数中调用icmp\_send\_packet函数时，
+可能会导致死锁。为了解决这个问题，我们在调用icmp\_send\_packet函数之前释放锁，调用之后重新获取锁。（这点在后续的bugfix中有体现）
+
+\subsection{发送ARP请求和应答}
+
+对于ARP的请求和应答，我们需要按照ARP协议的格式，分别构造ARP请求包和ARP应答包，并调用iface\_send\_packet函数发送出去。
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{fig/arp_request_reply.png}
+	\caption{ARP请求和应答格式}
+\end{figure}
+
+\begin{lstlisting}[language=C]
+void arp_send_request(iface_info_t *iface, u32 dst_ip)
+{
+	char *packet = malloc(sizeof(struct ether_header) + sizeof(struct ether_arp));
+	struct ether_header *eh = (struct ether_header *)packet;
+	struct ether_arp *arp_hdr = (struct ether_arp *)(packet + sizeof(struct ether_header));
+	// fill ethernet header
+	memset(eh->ether_dhost, 0xff, ETH_ALEN); 						// dest mac:broadcast
+	memcpy(eh->ether_shost, iface->mac, ETH_ALEN); 					// src mac
+	eh->ether_type = htons(ETH_P_ARP); 					 	   		// type:0806 ARP
+	// fill arp header
+	arp_hdr->arp_hrd = htons(ARPHRD_ETHER); 					   	// hardware type: Ethernet
+	arp_hdr->arp_pro = htons(ETH_P_IP); 						   	// protocol type: 0800 IPV4
+	arp_hdr->arp_hln = ETH_ALEN; 									// hardware address length: 6
+	arp_hdr->arp_pln = 4; 											// protocol address length: 4
+	arp_hdr->arp_op = htons(ARPOP_REQUEST); 						// operation: 1 request
+	memcpy(arp_hdr->arp_sha, iface->mac, ETH_ALEN); 				// sender mac
+	arp_hdr->arp_spa = htonl(iface->ip); 							// sender ip
+	memset(arp_hdr->arp_tha, 0x00, ETH_ALEN); 						// target mac: unknown
+	arp_hdr->arp_tpa = htonl(dst_ip); 								// target ip
+	iface_send_packet(iface, packet, sizeof(struct ether_header) + sizeof(struct ether_arp)); 					// send packet
+}
+\end{lstlisting}
+
+
+应答包的构造类似，这里不再赘述。
+
+随后我们需要实现一个处理ARP包的函数handle\_arp\_packet，用于处理接收到的ARP请求和应答包。
+如果是ARP请求包，且目标IP地址与当前接口的IP地址相同，则将发送方的IP地址和MAC地址插入到ARP缓存中并发送ARP应答包；
+如果是ARP应答包，则只将发送方的IP地址和MAC地址插入到ARP缓存中。
+\begin{lstlisting}[language=C]
+void handle_arp_packet(iface_info_t *iface, char *packet, int len)
+{
+	if (len < sizeof(struct ether_header) + sizeof(struct ether_arp)) {
+        return; 
+    }
+
+	struct ether_arp *arp_hdr = (struct ether_arp *)(packet + sizeof(struct ether_header));
+	u16 op = ntohs(arp_hdr->arp_op);
+	u32 spa = ntohl(arp_hdr->arp_spa);
+	u32 tpa = ntohl(arp_hdr->arp_tpa);
+
+	if (op == ARPOP_REQUEST) {
+		if (tpa == iface->ip) {
+			arpcache_insert(spa, arp_hdr->arp_sha);
+			arp_send_reply(iface, arp_hdr);
+		}
+	}
+	else if (op == ARPOP_REPLY) {
+		arpcache_insert(spa, arp_hdr->arp_sha);
+	}
+}
+\end{lstlisting}
+
+\section{实验结果}
+\subsection{实验内容一: 在h1上进行ping实验}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{fig/ping_h1_r1.png}
+	\caption{h1 ping r1 结果}
+\end{figure}
+
+Ping 10.0.1.1 (r1)，能够ping通。
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\textwidth]{fig/ping_h1_h2.png}
+	\caption{h1 ping h2 结果}
+\end{figure}
+
+Ping 10.0.2.22 (h2)，能够ping通。
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{fig/ping_h1_h3.png}
+	\caption{h1 ping h3 结果}
+\end{figure}
+Ping 10.0.3.33 (h3)，能够ping通。
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{fig/ping_h1_unreach_host.png}
+	\caption{h1 ping unreachable host 结果}
+\end{figure}
+Ping 10.0.3.11，返回ICMP Destination Host Unreachable。
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{fig/ping_h1_unreach_net.png}
+	\caption{h1 ping unreachable net 结果}
+\end{figure}
+Ping 10.0.4.1，返回ICMP Destination Net Unreachable。
+
+\subsection{实验内容二：构造一个包含多个路由器节点组成的网络，进行连通性测试和路径测试}
+
+构造了一个包含两个主机节点和三个路由节点的网络拓朴结构，并且手动配置了路由表。
+\begin{lstlisting}[language=python]
+# Get nodes
+h1, h2, r1, r2, r3 = net.get('h1', 'h2', 'r1', 'r2', 'r3')
+
+# Configure hosts
+h1.cmd('ifconfig h1-eth0 10.0.1.11/24')
+h2.cmd('ifconfig h2-eth0 10.0.4.22/24')
+h1.cmd('route add default gw 10.0.1.1')
+h2.cmd('route add default gw 10.0.4.1')
+
+# Configure routers
+r1.cmd('ifconfig r1-eth0 10.0.1.1/24')
+r1.cmd('ifconfig r1-eth1 10.0.2.1/24')
+r2.cmd('ifconfig r2-eth0 10.0.2.2/24')
+r2.cmd('ifconfig r2-eth1 10.0.3.1/24')
+r3.cmd('ifconfig r3-eth0 10.0.3.2/24')
+r3.cmd('ifconfig r3-eth1 10.0.4.1/24')
+
+# Configure static routes on routers
+r1.cmd('route add -net 10.0.3.0/24 gw 10.0.2.2')
+r1.cmd('route add -net 10.0.4.0/24 gw 10.0.2.2')
+
+r2.cmd('route add -net 10.0.1.0/24 gw 10.0.2.1')
+r2.cmd('route add -net 10.0.4.0/24 gw 10.0.3.2')
+
+r3.cmd('route add -net 10.0.1.0/24 gw 10.0.3.1')
+r3.cmd('route add -net 10.0.2.0/24 gw 10.0.3.1')
+
+# Disable offloading and IPv6
+for n in (h1, h2, r1, r2, r3):
+    n.cmd('./scripts/disable_offloading.sh')
+    n.cmd('./scripts/disable_ipv6.sh')
+\end{lstlisting}
+
+联通性测试结果如下(以h1 ping r1为例)：
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{fig/ping_h1_r1_my.png}
+	\caption{h1 ping r1 结果}
+\end{figure}
+
+路径测试结果如下(h1 traceroute h2)：
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{fig/traceroute_h1_h2_my.png}
+	\caption{h1 traceroute h2 结果}
+\end{figure}
+
+\section{实验中遇到的问题}
+
+本次实验中主要遇到了两个bug：
+
+\subsection{死锁问题}
+和前文所述一致，在arpcache\_sweep函数中调用icmp\_send\_packet函数前需要先释放锁，否则可能会导致死锁。
+因为，arpcache\_sweep函数持有arpcache锁，而icmp\_send\_packet函数最终会调用iface\_send\_packet\_by\_arp函数，
+而iface\_send\_packet\_by\_arp函数中会调用arpcache\_lookup函数，从而尝试获取已经被持有的锁，导致死锁。
+
+问题的发现也是在回传ICMP应答包的时候，发现始终没有相应。然后通过插入log输出，发现程序虽然成功进入了icmp\_send\_packet函数，
+但是并没有成功返回。经过分析代码逻辑，最终发现了这个死锁问题。
+
+\subsection{ICMP数据包构造问题}
+在发送ICMP目的地不可达和时间超过消息时，ICMP数据包的构造有误，导致接收端无法正确解析ICMP消息。
+具体来说，在构造ICMP数据包时，由于需要把源IP地址设置为当前接口的IP地址，目的IP地址设置为输入数据包的源IP地址，
+但是在之前的实现中，错误地将源IP地址和目的IP地址搞反了，导致接收端无法正确识别ICMP消息。
+
+问题的发现是在ICMP回传时，发现虽然包正确的发送出去了，但是接收端并没有收到正确的ICMP消息。通过将packet写入文件中，我查看
+了发送的包数据，发现了这个问题。
+
+\end{document}
+
