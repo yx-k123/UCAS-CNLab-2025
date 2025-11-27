@@ -44,13 +44,6 @@ void mospf_init()
 	init_mospf_db();
 }
 
-void *sending_mospf_hello_thread(void *param);
-void *sending_mospf_lsu_thread(void *param);
-void *checking_nbr_thread(void *param);
-void *checking_database_thread(void *param);
-void sending_mospf_lsu();
-void update_rtable();
-
 void mospf_run()
 {
 	pthread_t hello, lsu, nbr, db;
@@ -260,6 +253,7 @@ void handle_mospf_lsu(iface_info_t *iface, char *packet, int len)
 
     if (is_update) {
         update_rtable();
+        print_mospf_db();
 
         lsu->ttl--;
         if (lsu->ttl > 0) 
@@ -401,35 +395,25 @@ void sending_mospf_lsu()
     free(lsa_array);
 }
 
-// 辅助结构：Dijkstra 节点状态
-typedef struct {
-    u32 rid;            // Router ID
-    u32 dist;           // 距离
-    int visited;        // 是否已访问
-    u32 next_hop;       // 下一跳 IP (对于第一跳)
-    iface_info_t *iface;// 出接口 (对于第一跳)
-} dijkstra_node_t;
-
 void update_rtable()
 {
     fprintf(stdout, "Re-calculating routing table...\n");
     pthread_mutex_lock(&mospf_lock);
-    // 1. 清空旧的动态路由 (保留直连路由)
+
+    // 1. delete old dynamic routes
     rt_entry_t *entry, *q;
     list_for_each_entry_safe(entry, q, &rtable, list) {
-        if (entry->gw != 0) { // gw!=0 认为是动态路由/非直连路由
+        if (entry->gw != 0) { // not a directly connected route
             list_delete_entry(&entry->list);
             free(entry);
         }
     }
 
-    // 2. 初始化 Dijkstra 数据结构
-    // 假设网络最大节点数 20 (根据实验规模调整)
-    #define MAX_NODES 10
+    // 2. Initialize Dijkstra data structure
     dijkstra_node_t nodes[MAX_NODES];
     int num_nodes = 0;
 
-    // 添加自己 (Root)
+    // Add self (Root)
     nodes[num_nodes].rid = instance->router_id;
     nodes[num_nodes].dist = 0;
     nodes[num_nodes].visited = 0;
@@ -437,21 +421,21 @@ void update_rtable()
     nodes[num_nodes].iface = NULL;
     num_nodes++;
 
-    // 将 LSDB 中的所有路由器加入节点列表
+    // Add all routers from LSDB to the node list
     mospf_db_entry_t *db_e;
     list_for_each_entry(db_e, &mospf_db, list) {
         if (num_nodes >= MAX_NODES) break;
         nodes[num_nodes].rid = db_e->rid;
-        nodes[num_nodes].dist = (u32)-1; // 无穷大
+        nodes[num_nodes].dist = (u32)-1;
         nodes[num_nodes].visited = 0;
         nodes[num_nodes].next_hop = 0;
         nodes[num_nodes].iface = NULL;
         num_nodes++;
     }
 
-    // 3. Dijkstra 主循环
+    // 3. Dijkstra Algorithm
     while (1) {
-        // 3.1 寻找未访问且距离最小的节点 u
+        // Find the unvisited node u with the smallest distance
         int u_idx = -1;
         u32 min_dist = (u32)-1;
 
@@ -462,28 +446,28 @@ void update_rtable()
             }
         }
 
-        if (u_idx == -1) break; // 所有可达节点都已访问
+        if (u_idx == -1) break; // All reachable nodes have been visited
         nodes[u_idx].visited = 1;
 
-        // 3.2 遍历 u 的邻居 v
-        // 获取 u 的 LSA 信息
+        // Traverse neighbors v of u
+        // Get LSA information of u
         int nadv = 0;
         struct mospf_lsa *lsa_array = NULL;
 
         if (nodes[u_idx].rid == instance->router_id) {
-            // 如果 u 是自己，从 iface_list 获取邻居
+            // If u is self, get neighbors from iface_list
             iface_info_t *iface;
             list_for_each_entry(iface, &instance->iface_list, list) {
                 mospf_nbr_t *nbr;
                 list_for_each_entry(nbr, &iface->nbr_list, list) {
-                    // 找到邻居在 nodes 数组中的位置
+                    // Find the neighbor's position in the nodes array
                     for (int v = 0; v < num_nodes; v++) {
                         if (nodes[v].rid == nbr->nbr_id) {
-                            // 松弛操作
+                            // Relaxation
                             if (nodes[u_idx].dist + 1 < nodes[v].dist) {
                                 nodes[v].dist = nodes[u_idx].dist + 1;
-                                nodes[v].next_hop = nbr->nbr_ip; // 第一跳下一跳
-                                nodes[v].iface = iface;          // 第一跳出接口
+                                nodes[v].next_hop = nbr->nbr_ip; // First hop next hop
+                                nodes[v].iface = iface;          // First hop outgoing interface
                             }
                             break;
                         }
@@ -491,7 +475,7 @@ void update_rtable()
                 }
             }
         } else {
-            // 如果 u 是其他路由器，从 LSDB 获取 LSA
+            // If u is other router, get LSA from LSDB
             mospf_db_entry_t *db = NULL;
             list_for_each_entry(db, &mospf_db, list) {
                 if (db->rid == nodes[u_idx].rid) {
@@ -508,8 +492,6 @@ void update_rtable()
                 u32 network = ntohl(lsa_array[i].network);
                 u32 mask = ntohl(lsa_array[i].mask);
 
-                // 【修复1 & 2】 无论是否为 Stub，都尝试添加路由
-                // 先检查路由表中是否已存在该网络，避免重复添加
                 int found = 0;
                 rt_entry_t *entry_check;
                 list_for_each_entry(entry_check, &rtable, list) {
@@ -520,15 +502,14 @@ void update_rtable()
                 }
 
                 if (!found) {
-                    // 只有当该节点可达时才添加路由
                     if (nodes[u_idx].dist != (u32)-1) {
                         rt_entry_t *new_entry = (rt_entry_t *)malloc(sizeof(rt_entry_t));
-                        memset(new_entry, 0, sizeof(rt_entry_t)); // 初始化内存
+                        memset(new_entry, 0, sizeof(rt_entry_t)); 
 
                         new_entry->dest = network;
                         new_entry->mask = mask;
-                        new_entry->gw = nodes[u_idx].next_hop; // 继承第一跳
-                        new_entry->iface = nodes[u_idx].iface; // 继承第一跳
+                        new_entry->gw = nodes[u_idx].next_hop; 
+                        new_entry->iface = nodes[u_idx].iface;
                         
                         if (new_entry->iface) {
                             strcpy(new_entry->if_name, new_entry->iface->name);
@@ -538,14 +519,13 @@ void update_rtable()
                     }
                 }
 
-                // 【原有逻辑】 如果是路由器邻居，进行松弛操作
                 if (neighbor_rid != 0) {
                     for (int v = 0; v < num_nodes; v++) {
                         if (nodes[v].rid == neighbor_rid) {
                             if (nodes[u_idx].dist + 1 < nodes[v].dist) {
                                 nodes[v].dist = nodes[u_idx].dist + 1;
-                                nodes[v].next_hop = nodes[u_idx].next_hop; // 继承
-                                nodes[v].iface = nodes[u_idx].iface;       // 继承
+                                nodes[v].next_hop = nodes[u_idx].next_hop; 
+                                nodes[v].iface = nodes[u_idx].iface; 
                             }
                             break;
                         }
@@ -555,5 +535,33 @@ void update_rtable()
         }
     }
     // print_rtable();
+    pthread_mutex_unlock(&mospf_lock);
+}
+
+void print_mospf_db()
+{
+    pthread_mutex_lock(&mospf_lock);
+    
+    fprintf(stdout, "MOSPF Database entries:\n");
+    fprintf(stdout, "RID\t\tNetwork\t\tMask\t\tNeighbor\n");
+    fprintf(stdout, "----------------------------------------------------------------\n");
+
+    mospf_db_entry_t *db_entry = NULL;
+    list_for_each_entry(db_entry, &mospf_db, list) {
+        for (int i = 0; i < db_entry->nadv; i++) {
+            struct mospf_lsa *lsa = &db_entry->array[i];
+            u32 db_rid = db_entry->rid;
+            u32 net = ntohl(lsa->network);
+            u32 m = ntohl(lsa->mask);
+            u32 neigh = ntohl(lsa->rid);
+            fprintf(stdout, IP_FMT "\t" IP_FMT "\t" IP_FMT "\t" IP_FMT "\n",
+                    HOST_IP_FMT_STR(db_rid),
+                    HOST_IP_FMT_STR(net),
+                    HOST_IP_FMT_STR(m),
+                    HOST_IP_FMT_STR(neigh));
+        }
+    }
+    fprintf(stdout, "\n");
+    
     pthread_mutex_unlock(&mospf_lock);
 }
