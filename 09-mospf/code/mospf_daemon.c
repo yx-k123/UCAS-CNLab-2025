@@ -136,8 +136,8 @@ void *checking_database_thread(void *param)
 		list_for_each_entry_safe(db_entry, db_q, &mospf_db, list) {
 			db_entry->alive++;
 			if (db_entry->alive > MOSPF_DATABASE_TIMEOUT) {
-				fprintf(stdout, "DEBUG: Router " IP_FMT " timed out, removing from DB.\n", 
-                        HOST_IP_FMT_STR(db_entry->rid));
+				// fprintf(stdout, "DEBUG: Router " IP_FMT " timed out, removing from DB.\n", 
+                //         HOST_IP_FMT_STR(db_entry->rid));
                 list_delete_entry(&db_entry->list);
                 free(db_entry);
             }
@@ -253,7 +253,7 @@ void handle_mospf_lsu(iface_info_t *iface, char *packet, int len)
 
     if (is_update) {
         update_rtable();
-        print_mospf_db();
+        // print_mospf_db();
 
         lsu->ttl--;
         if (lsu->ttl > 0) 
@@ -397,7 +397,7 @@ void sending_mospf_lsu()
 
 void update_rtable()
 {
-    fprintf(stdout, "Re-calculating routing table...\n");
+    // fprintf(stdout, "Re-calculating routing table...\n");
     pthread_mutex_lock(&mospf_lock);
 
     // 1. delete old dynamic routes
