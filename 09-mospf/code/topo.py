@@ -15,7 +15,7 @@ def check_scripts():
     
     for fname in glob.glob(dir + '/' + 'scripts/*.sh'):
         if not os.access(fname, os.X_OK):
-            print '%s should be set executable by using `chmod +x $script_name`' % (fname)
+            print ('%s should be set executable by using `chmod +x $script_name`' % (fname))
             sys.exit(1)
 
     for program in script_deps:
@@ -26,7 +26,7 @@ def check_scripts():
                 found = True
                 break
         if not found:
-            print '`%s` is required but missing, which could be installed via `apt` or `aptitude`' % (program)
+            print ('`%s` is required but missing, which could be installed via `apt` or `aptitude`' % (program))
             sys.exit(2)
 
 class MOSPFTopo(Topo):
@@ -84,5 +84,9 @@ if __name__ == '__main__':
         r.cmd('./scripts/disable_ipv6.sh')
 
     net.start()
+    r1.cmd('./mospfd > ./log/r1_mospfd.log 2>&1 &')
+    r2.cmd('./mospfd > ./log/r2_mospfd.log 2>&1 &')
+    r3.cmd('./mospfd > ./log/r3_mospfd.log 2>&1 &')
+    r4.cmd('./mospfd > ./log/r4_mospfd.log 2>&1 &')
     CLI(net)
     net.stop()
