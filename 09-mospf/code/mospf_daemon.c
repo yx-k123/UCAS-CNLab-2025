@@ -534,7 +534,8 @@ void update_rtable()
             }
         }
     }
-    // print_rtable();
+    print_rtable();
+    // print_mospf_db();
     pthread_mutex_unlock(&mospf_lock);
 }
 

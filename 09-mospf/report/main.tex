@@ -1,0 +1,428 @@
+% 这是中国科学院大学计算机科学与技术专业《计算机组成原理（研讨课）》使用的实验报告 Latex 模板
+% 本模板与 2024 年 2 月 Jun-xiong Ji 完成, 更改自由 Shing-Ho Lin 和 Jun-Xiong Ji 于 2022 年 9 月共同完成的基础物理实验模板
+% 如有任何问题, 请联系: jijunxoing21@mails.ucas.ac.cn
+% This is the LaTeX template for report of Experiment of Computer Organization and Design courses, based on its provided Word template. 
+% This template is completed on Febrary 2024, based on the joint collabration of Shing-Ho Lin and Junxiong Ji in September 2022. 
+% Adding numerous pictures and equations leads to unsatisfying experience in Word. Therefore LaTeX is better. 
+% Feel free to contact me via: jijunxoing21@mails.ucas.ac.cn
+
+\documentclass[11pt]{article}
+
+\usepackage[a4paper]{geometry}
+\geometry{left=2.0cm,right=2.0cm,top=2.5cm,bottom=2.5cm}
+
+\usepackage{ctex} % 支持中文的LaTeX宏包
+\usepackage{amsmath,amsfonts,graphicx,subfigure,amssymb,bm,amsthm,mathrsfs,mathtools,breqn} % 数学公式和符号的宏包集合
+\usepackage{algorithm,algorithmicx} % 算法和伪代码
+\usepackage[noend]{algpseudocode} % 算法和伪代码
+\usepackage{fancyhdr} % 自定义页眉页脚
+\usepackage[framemethod=TikZ]{mdframed} % 创建带边框的框架
+\usepackage{fontspec} % 字体设置
+\usepackage{adjustbox} % 调整盒子大小
+\usepackage{fontsize} % 设置字体大小
+\usepackage{tikz,xcolor} % 绘制图形和使用颜色
+\usepackage{multicol} % 多栏排版
+\usepackage{multirow} % 表格中合并单元格
+\usepackage{pdfpages} % 插入PDF文件
+\usepackage{listings} % 在文档中插入源代码
+\usepackage{wrapfig} % 文字绕排图片
+\usepackage{bigstrut,multirow,rotating} % 支持在表格中使用特殊命令
+\usepackage{booktabs} % 创建美观的表格
+\usepackage{circuitikz} % 绘制电路图
+\usepackage{zhnumber} % 中文序号（用于标题）
+\usepackage{tabularx} % 表格折行
+\usepackage{tikz}
+\usetikzlibrary{positioning} % 加载 positioning 库
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\lstset{
+  frame=tb,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  framerule=1pt,
+  rulecolor=\color{gray!35},
+  backgroundcolor=\color{gray!5},
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+}
+
+% 超链接支持 (一定要在大多数包之后, cleveref 之前)
+% colorlinks=true 使链接文字着色而不是加方框; hidelinks 可去掉颜色
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=magenta]{hyperref}
+
+% 轻松引用, 可以用\cref{}指令直接引用, 自动加前缀. 需要在 hyperref 之后加载
+% 例: 图片label为fig:1  => \cref{fig:1} -> Figure.1; \ref{fig:1} -> 1 (纯数字)
+\usepackage[capitalize]{cleveref}
+% \crefname{section}{Sec.}{Secs.}
+\Crefname{section}{Section}{Sections}
+\Crefname{table}{Table}{Tables}
+\crefname{table}{Table.}{Tabs.}
+
+% \setmainfont{Palatino Linotype.ttf}
+% \setCJKmainfont{SimHei.ttf}
+% \setCJKsansfont{Songti.ttf}
+% \setCJKmonofont{SimSun.ttf}
+\punctstyle{kaiming}
+% 偏好的几个字体, 可以根据需要自行加入字体ttf文件并调用
+
+\renewcommand{\emph}[1]{\begin{kaishu}#1\end{kaishu}}
+
+% 对 section 等环境的序号使用中文
+\renewcommand \thesection{\zhnum{section}、}
+\renewcommand \thesubsection{\arabic{section}.\arabic{subsection}}
+
+\tikzset{
+    link/.style={draw, thick, -stealth} % 定义 link 样式，包含绘制、粗线条和箭头
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%改这里可以修改实验报告表头的信息
+\newcommand{\name}{寇逸欣}
+\newcommand{\studentNum}{2023K8009922004}
+\newcommand{\major}{计算机科学与技术}
+\newcommand{\labNum}{09}
+\newcommand{\labName}{网络路由实验}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\input{tex_file/head.tex}
+
+\section{实验内容}
+\begin{enumerate}
+	\item 基于已有代码框架，实现路由器生成和处理mOSPF Hello/LSU消息的相关操作，构建一致性链路状态数据库。
+	\item 基于实验一，实现路由器计算路由表项的相关操作。
+\end{enumerate}
+
+\section{实验流程}
+\subsection{实验一：构建一致性链路状态数据库}
+我们可以看到在mospf\_daemon.c文件中，对于链路状态使用了四个线程来处理：
+\begin{enumerate}
+	\item sending_mospf_hello_thread：定期发送Hello消息
+	\item sending_mospf_lsu_thread：定期发送LSU消息
+	\item checking_nbr_thread：检查邻居状态
+	\item checking_database_thread：检查链路状态数据库
+\end{enumerate}
+
+我们一个一个来实现这些线程的功能。
+
+\subsubsection{定期发送Hello消息}
+首先是sending\_mospf\_hello\_thread线程。该线程的主要功能是定期向所有接口发送Hello消息，以便与邻居建立和维护邻居关系。
+我们需要遍历所有接口，并为每个接口构建并发送Hello消息。mOSPF Hello消息的格式如下：
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.6\textwidth]{fig/mospf_hello.png}
+	\caption{mOSPF Hello消息格式}
+	\label{fig:mospf_hello}
+\end{figure}
+
+除此之外，我们还需要给Hello消息添加mOSPF头部。mOSPF头部的格式如下：
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.6\textwidth]{fig/mospf_header.png}
+	\caption{mOSPF头部格式}
+	\label{fig:mospf_header}
+\end{figure}
+
+在mospf\_proto.c文件中，已经实现好了填充mospf头部，hello消息和lsu消息的函数，我们只需要调用即可。
+我们还要添加ip头和以太网头。按照约定，mOSPF Hello消息目的IP地址为224.0.0.5，目的MAC地址为01:00:5E:00:00:05。
+
+\begin{lstlisting}[language=C, caption={定期发送Hello消息代码片段}, label={lst:send_hello}]
+list_for_each_entry(iface, &instance->iface_list, list) {
+    int len = MOSPF_HDR_SIZE + MOSPF_HELLO_SIZE + IP_BASE_HDR_SIZE + ETHER_HDR_SIZE;
+    char *packet = (char *)malloc(len);
+    if (!packet) continue; 
+            
+    memset(packet, 0, len);
+
+    // 1. Fill MOSPF Header & Body
+    struct mospf_hdr *mospf = (struct mospf_hdr *)(packet + ETHER_HDR_SIZE + IP_BASE_HDR_SIZE);
+    struct mospf_hello *hello = (struct mospf_hello *)(packet + ETHER_HDR_SIZE + IP_BASE_HDR_SIZE + MOSPF_HDR_SIZE);
+            
+    mospf_init_hello(hello, iface->mask);
+    mospf_init_hdr(mospf, MOSPF_TYPE_HELLO, MOSPF_HDR_SIZE + MOSPF_HELLO_SIZE, instance->router_id, instance->area_id);
+
+    mospf->checksum = mospf_checksum(mospf); 
+
+    // 2. Fill IP Header
+    struct iphdr *ip = (struct iphdr *)(packet + ETHER_HDR_SIZE);
+    ip_init_hdr(ip, iface->ip, MOSPF_ALLSPFRouters, MOSPF_HDR_SIZE + MOSPF_HELLO_SIZE + IP_BASE_HDR_SIZE, IPPROTO_MOSPF);
+            
+    ip->ttl = 1; 
+    ip->checksum = ip_checksum(ip);
+
+    // 3. Fill Ethernet Header
+    u8 multicast_mac[ETH_ALEN] = {0x01, 0x00, 0x5e, 0x00, 0x00, 0x05};
+    struct ether_header *eh = (struct ether_header *)packet;
+    memcpy(eh->ether_dhost, multicast_mac, ETH_ALEN);
+    memcpy(eh->ether_shost, iface->mac, ETH_ALEN);
+    eh->ether_type = htons(ETH_P_IP);
+
+    // 4. Send
+    iface_send_packet(iface, packet, len);
+}
+\end{lstlisting}
+
+\subsubsection{定期发送LSU消息}
+接下来是sending\_mospf\_lsu\_thread线程。该线程的主要功能是定期向所有邻居发送LSU消息，以便通告链路状态信息。
+我们需要遍历链路状态数据库中的所有链路状态条目，并为每个条目构建并发送LSU消息。mOSPF LSU消息的格式如下：
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.6\textwidth]{fig/mospf_lsu.png}
+	\caption{mOSPF LSU消息格式}
+	\label{fig:mospf_lsu}
+\end{figure}
+
+由于目的mac在此处不确定，所以使用ip\_send\_packet函数发送数据包。其他的和hello消息类似。
+
+\subsubsection{检查邻居状态}
+然后是checking\_nbr\_thread线程。该线程的主要功能是定期检查邻居状态，并删除超时的邻居。
+我们需要遍历每个接口的邻居列表，检查每个邻居的状态，如果这个邻居已经超过了邻居超时时间没有收到Hello消息，就将其删除。
+如果没有超过就将其超时时间加1。
+
+\begin{lstlisting}[language=C, caption={检查邻居状态代码片段}, label={lst:check_nbr}]
+void *checking_nbr_thread(void *param)
+{
+	// fprintf(stdout, "TODO: neighbor list timeout operation.\n");
+	iface_info_t *iface = NULL;
+	while (1) {
+		pthread_mutex_lock(&mospf_lock);
+		list_for_each_entry(iface, &instance->iface_list, list) {
+			mospf_nbr_t *nbr = NULL, *nbr_q = NULL;
+			list_for_each_entry_safe(nbr, nbr_q, &iface->nbr_list, list) {
+				nbr->alive++;
+				if (nbr->alive > iface->helloint * 3) {
+					list_delete_entry(&nbr->list);
+					free(nbr);
+					iface->num_nbr--;
+					sending_mospf_lsu();
+				}
+			}
+		}
+		pthread_mutex_unlock(&mospf_lock);
+		sleep(1);
+	}
+	return NULL;
+}
+\end{lstlisting}
+
+\subsubsection{检查链路状态数据库}
+最后是checking\_database\_thread线程。该线程的主要功能是定期检查链路状态数据库，并删除过期的链路状态条目。
+我们需要遍历链路状态数据库中的所有链路状态条目，检查每个条目的状态，如果这个条目已经超过了链路状态超时时间没有收到LSU消息，就将其删除。
+这个实现和检查邻居状态类似。
+
+除了上述四个线程函数之外，我们还需要实现两个函数分别用于处理到的mOSPF Hello消息和LSU消息，分别是handle\_mospf\_hello和handle\_mospf\_lsu函数。
+
+\subsubsection{处理mOSPF消息}
+对于生成一致链路状态数据库来说，最重要的就是处理收到的mOSPF消息了。
+首先是handle\_mospf\_hello函数。该函数的主要功能是处理收到的mOSPF Hello消息，并更新邻居列表。
+
+对于接受到的Hello消息，首先我们需要提取出消息中的rid，src_ip和mask字段，检查rid是否存在于邻居列表中。
+如果存在，就将其超时时间清零；如果不存在，就创建一个新的邻居条目，并将其添加到邻居列表中。并且发送LSU消息。
+\begin{lstlisting}[language=C, caption={处理mOSPF Hello消息代码片段}, label={lst:handle_hello}]
+void handle_mospf_hello(iface_info_t *iface, const char *packet, int len)
+{
+	// fprintf(stdout, "TODO: handle mOSPF Hello message.\n");
+	struct mospf_header *eh = (struct mospf_header *)packet;
+	struct iphdr *ip = (struct iphdr *)(packet + ETHER_HDR_SIZE);
+	struct mospf_hdr *mospf = (struct mospf_hdr *)((char *)ip + IP_HDR_SIZE(ip));
+	struct mospf_hello *hello = (struct mospf_hello *)((char *)mospf + MOSPF_HDR_SIZE);
+	
+	u32 rid = ntohl(mospf->rid);
+	u32 src_ip = ntohl(ip->saddr);
+	u32 mask = ntohl(hello->mask);
+
+	pthread_mutex_lock(&mospf_lock);
+
+	int found = 0;
+	mospf_nbr_t *nbr = NULL;
+
+	list_for_each_entry(nbr, &iface->nbr_list, list) {
+		if (nbr->nbr_id == rid) {
+			found = 1;
+			nbr->alive = 0;
+			break;
+		}
+	}
+	if (!found) {
+		nbr = (mospf_nbr_t *)malloc(sizeof(mospf_nbr_t));
+		if (nbr) {
+			nbr->nbr_id = rid;
+			nbr->nbr_ip = src_ip;
+			nbr->nbr_mask = mask;
+			nbr->alive = 0;
+			list_add_tail(&nbr->list, &iface->nbr_list);
+			iface->num_nbr++;
+			sending_mospf_lsu();
+		}	
+	}	
+	pthread_mutex_unlock(&mospf_lock);
+}
+\end{lstlisting}
+
+对于接受到的LSU消息，我们需要提取出消息中的rid，seq，ttl和nadv字段，检查rid是否存在于链路状态数据库中。
+如果存在，且该条目的序列号小于收到的序列号，就更新该条目的信息；如果不存在，就创建一个新的链路状态条目，并将其添加到链路状态数据库中。
+然后更新路由表（这是后续动态路由表计算的部分）。最后，我们还需要将该LSU的ttl减1，如果ttl大于0，就将该LSU转发给所有邻居。
+这一段代码比较长，而且也和hello的消息处理比较的相像。
+
+\subsection{实验二：计算路由表项}
+在完成实验一后，我们已经构建好了链路状态数据库，在启动网络一端时间后，每个节点的链路状态就会收敛到一个稳定状态。
+此时每个节点都拥有了一份网络的完整拓扑信息了，接下来我们就可以使用Dijkstra算法来计算最短路径，从而生成路由表项了。
+笔者单独实现了一个update\_rtable函数用于更新路由表。
+
+具体来说就是按照Dijkstra算法的步骤来实现的。首先定义数据结构：
+\begin{lstlisting}[language=C, caption={Dijkstra算法数据结构代码片段}, label={lst:dijkstra_struct}]
+typedef struct {
+    u32 rid;            // Router ID
+    u32 dist;           // 距离
+    int visited;        // 是否已访问
+    u32 next_hop;       // 下一跳 IP (对于第一跳)
+    iface_info_t *iface;// 出接口 (对于第一跳)
+} dijkstra_node_t;
+\end{lstlisting}
+
+此处定义了一个 dijkstra_node_t 结构体用于存储 Dijkstra 算法中的节点信息，包括路由器ID、当前最短距离、
+是否已访问、以及到达该节点所需的下一跳 IP 和出接口。
+
+在网络路由动态计算的实现中，与标准 Dijkstra 算法仅计算最短路径树不同，我们需要在松弛（Relaxation）过程中传递转发信息。
+即：对于源节点的直连邻居，记录实际的下一跳和出接口；对于更远的节点，其下一跳和出接口直接继承自其前驱节点。
+
+算法流程为：按照距离从小到大依次选取未访问节点 u。若 u 为源节点，则初始化其邻居的转发信息；若 u 为远端节点，
+则遍历其 LSA 中的网络信息，若该网络对应的路由未被计算过，则使用节点 u 中保存的下一跳和出接口信息生成新的路由表项；
+同时对 u 的邻居进行松弛操作，直到所有节点均被访问过为止。
+
+相关代码比较长，这里不再赘述，完整代码见源文件。
+
+\section{实验结果}
+实验所用的网络拓扑如图所示：
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{fig/topo.png}
+  \caption{实验网络拓扑}
+  \label{fig:topology}
+\end{figure}
+
+\subsection{实验一结果}
+我们实现了一个函数用于打印链路状态数据库：
+\begin{lstlisting}[language=C, caption={打印链路状态数据库代码片段}, label={lst:print_db}]
+void print_mospf_db()
+{
+    pthread_mutex_lock(&mospf_lock);
+    
+    fprintf(stdout, "MOSPF Database entries:\n");
+    fprintf(stdout, "RID\t\tNetwork\t\tMask\t\tNeighbor\n");
+    fprintf(stdout, "----------------------------------------------------------------\n");
+
+    mospf_db_entry_t *db_entry = NULL;
+    list_for_each_entry(db_entry, &mospf_db, list) {
+        for (int i = 0; i < db_entry->nadv; i++) {
+            struct mospf_lsa *lsa = &db_entry->array[i];
+            u32 db_rid = db_entry->rid;
+            u32 net = ntohl(lsa->network);
+            u32 m = ntohl(lsa->mask);
+            u32 neigh = ntohl(lsa->rid);
+            fprintf(stdout, IP_FMT "\t" IP_FMT "\t" IP_FMT "\t" IP_FMT "\n",
+                    HOST_IP_FMT_STR(db_rid),
+                    HOST_IP_FMT_STR(net),
+                    HOST_IP_FMT_STR(m),
+                    HOST_IP_FMT_STR(neigh));
+        }
+    }
+    fprintf(stdout, "\n");
+    
+    pthread_mutex_unlock(&mospf_lock);
+}
+\end{lstlisting}
+
+在启动mininet网络后，将输出重定向到log文件中，然后等待一段时间让链路状态收敛，最后查看log文件中的链路状态数据库内容，如图所示：
+\begin{figure}[H]
+	\centering
+	\subfigure[r1 节点链路状态数据库内容]{%
+		\includegraphics[width=0.48\textwidth]{fig/mospf_db_r1.png}%
+		\label{fig:mospf_db_r1}%
+	}\hfill
+	\subfigure[r2 节点链路状态数据库内容]{%
+		\includegraphics[width=0.48\textwidth]{fig/mospf_db_r2.png}%
+		\label{fig:mospf_db_r2}%
+	}
+
+	\vspace{3mm}
+
+	\subfigure[r3 节点链路状态数据库内容]{%
+		\includegraphics[width=0.48\textwidth]{fig/mospf_db_r3.png}%
+		\label{fig:mospf_db_r3}%
+	}\hfill
+	\subfigure[r4 节点链路状态数据库内容]{%
+		\includegraphics[width=0.48\textwidth]{fig/mospf_db_r4.png}%
+		\label{fig:mospf_db_r4}%
+	}
+
+	\caption{四节点链路状态数据库}
+	\label{fig:mospf_db_all}
+\end{figure}
+
+可以看到，四个路由器节点的链路状态数据库内容均正确，且一致，说明链路状态已经收敛。
+
+\subsection{实验二结果}
+路由表的打印可以直接调用函数print\_rtable函数。活得输出的方法和上面类似。
+等待一段时间让路由表收敛后，查看log文件中的路由表内容，如图所示：
+\begin{figure}[H]
+	\centering
+	\subfigure[r1 节点路由表内容]{%
+		\includegraphics[width=0.48\textwidth]{fig/rtable_r1.png}%
+		\label{fig:rtable_r1}%
+	}\hfill
+	\subfigure[r2 节点路由表内容]{%
+		\includegraphics[width=0.48\textwidth]{fig/rtable_r2.png}%
+		\label{fig:rtable_r2}%
+	}\hfill
+	\subfigure[r3 节点路由表内容]{%
+		\includegraphics[width=0.48\textwidth]{fig/rtable_r3.png}%
+		\label{fig:rtable_r3}%
+	}\hfill
+	\subfigure[r4 节点路由表内容]{%
+		\includegraphics[width=0.48\textwidth]{fig/rtable_r4.png}%
+		\label{fig:rtable_r4}%
+	}
+	\caption{四节点路由表}
+	\label{fig:rtable_all}
+\end{figure}
+
+可以看到，四个路由器节点的路由表内容均正确，且一致，说明路由表已经收敛。
+
+第二个实验小项，使用traceroute测试h1到h2的路径，随后断开r2和r4节点的连接，经过一段时间后再次使用traceroute测试h1到h2的路径，结果如下所示：
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{fig/traceroute.png}
+	\caption{traceroute测试结果}
+	\label{fig:traceroute}
+\end{figure}
+
+可以看到，第一次traceroute时，数据包经过r1、r2、r4到达h2；断开r2和r4节点的连接后，经过一段时间路由表收敛，再次traceroute时，数据包经过r1、r3、r4到达h2。
+
+验证了路由器能够根据链路状态动态计算路由表，并在网络拓扑变化时及时更新路由表，保证数据包能够正确到达目的地。
+
+\section{实验中遇到的问题}
+
+在给mOSPF LSU消息转发时，最开始笔者错误地使用了iface\_send\_packet函数发送数据包，导致数据包无法正确发送到目的地。但是因为
+mOSPF LSU消息的目的MAC地址是不确定的，所以应该使用ip\_send\_packet函数发送数据包。修改后问题解决。
+
+除此之外，在给mOSPF LSU消息添加以太头的时候，一开始考虑拷贝0到目的MAC地址，但是由于memcpy函数的参数置0会导致
+拷贝0地址的信息，最终使得程序崩溃。后来改为用memset函数将目的MAC地址置0，问题解决。
+
+
+\end{document}
+
