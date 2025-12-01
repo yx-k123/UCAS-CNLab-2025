@@ -1,5 +1,5 @@
-#include "util.h"
-#include "tree.h"
+#include "include/util.h"
+#include "include/tree.h"
 
 // return the interval in us
 long get_interval(struct timeval tv_start,struct timeval tv_end)

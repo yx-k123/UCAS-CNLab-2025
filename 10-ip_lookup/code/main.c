@@ -2,8 +2,8 @@
 #include <sys/time.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "util.h"
-#include "tree.h"
+#include "include/util.h"
+#include "include/tree.h"
 
 const char* forwardingtable = "test/forwarding_table.txt";
 
