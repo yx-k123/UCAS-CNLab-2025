@@ -1,0 +1,339 @@
+% 这是中国科学院大学计算机科学与技术专业《计算机组成原理（研讨课）》使用的实验报告 Latex 模板
+% 本模板与 2024 年 2 月 Jun-xiong Ji 完成, 更改自由 Shing-Ho Lin 和 Jun-Xiong Ji 于 2022 年 9 月共同完成的基础物理实验模板
+% 如有任何问题, 请联系: jijunxoing21@mails.ucas.ac.cn
+% This is the LaTeX template for report of Experiment of Computer Organization and Design courses, based on its provided Word template. 
+% This template is completed on Febrary 2024, based on the joint collabration of Shing-Ho Lin and Junxiong Ji in September 2022. 
+% Adding numerous pictures and equations leads to unsatisfying experience in Word. Therefore LaTeX is better. 
+% Feel free to contact me via: jijunxoing21@mails.ucas.ac.cn
+
+\documentclass[11pt]{article}
+
+\usepackage[a4paper]{geometry}
+\geometry{left=2.0cm,right=2.0cm,top=2.5cm,bottom=2.5cm}
+
+\usepackage{ctex} % 支持中文的LaTeX宏包
+\usepackage{amsmath,amsfonts,graphicx,subfigure,amssymb,bm,amsthm,mathrsfs,mathtools,breqn} % 数学公式和符号的宏包集合
+\usepackage{algorithm,algorithmicx} % 算法和伪代码
+\usepackage[noend]{algpseudocode} % 算法和伪代码
+\usepackage{fancyhdr} % 自定义页眉页脚
+\usepackage[framemethod=TikZ]{mdframed} % 创建带边框的框架
+\usepackage{fontspec} % 字体设置
+\usepackage{adjustbox} % 调整盒子大小
+\usepackage{fontsize} % 设置字体大小
+\usepackage{tikz,xcolor} % 绘制图形和使用颜色
+\usepackage{multicol} % 多栏排版
+\usepackage{multirow} % 表格中合并单元格
+\usepackage{pdfpages} % 插入PDF文件
+\usepackage{listings} % 在文档中插入源代码
+\usepackage{wrapfig} % 文字绕排图片
+\usepackage{bigstrut,multirow,rotating} % 支持在表格中使用特殊命令
+\usepackage{booktabs} % 创建美观的表格
+\usepackage{circuitikz} % 绘制电路图
+\usepackage{zhnumber} % 中文序号（用于标题）
+\usepackage{tabularx} % 表格折行
+\usepackage{tikz}
+\usetikzlibrary{positioning} % 加载 positioning 库
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\lstset{
+  frame=tb,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  framerule=1pt,
+  rulecolor=\color{gray!35},
+  backgroundcolor=\color{gray!5},
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+}
+
+% 超链接支持 (一定要在大多数包之后, cleveref 之前)
+% colorlinks=true 使链接文字着色而不是加方框; hidelinks 可去掉颜色
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=magenta]{hyperref}
+
+% 轻松引用, 可以用\cref{}指令直接引用, 自动加前缀. 需要在 hyperref 之后加载
+% 例: 图片label为fig:1  => \cref{fig:1} -> Figure.1; \ref{fig:1} -> 1 (纯数字)
+\usepackage[capitalize]{cleveref}
+% \crefname{section}{Sec.}{Secs.}
+\Crefname{section}{Section}{Sections}
+\Crefname{table}{Table}{Tables}
+\crefname{table}{Table.}{Tabs.}
+
+% \setmainfont{Palatino Linotype.ttf}
+% \setCJKmainfont{SimHei.ttf}
+% \setCJKsansfont{Songti.ttf}
+% \setCJKmonofont{SimSun.ttf}
+\punctstyle{kaiming}
+% 偏好的几个字体, 可以根据需要自行加入字体ttf文件并调用
+
+\renewcommand{\emph}[1]{\begin{kaishu}#1\end{kaishu}}
+
+% 对 section 等环境的序号使用中文
+\renewcommand \thesection{\zhnum{section}、}
+\renewcommand \thesubsection{\arabic{section}.\arabic{subsection}}
+
+\tikzset{
+    link/.style={draw, thick, -stealth} % 定义 link 样式，包含绘制、粗线条和箭头
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%改这里可以修改实验报告表头的信息
+\newcommand{\name}{寇逸欣}
+\newcommand{\studentNum}{2023K8009922004}
+\newcommand{\major}{计算机科学与技术}
+\newcommand{\labNum}{10}
+\newcommand{\labName}{高效IP路由查找实验}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\input{tex_file/head.tex}
+
+\section{实验内容}
+\begin{enumerate}
+	\item 实现最基本的前缀树查找算法。
+	\item 调研并实现某种优化的IP前缀查找方案。
+	\begin{itemize}
+		\item 参考文献：Poptrie: A Compressed Trie with Population Count for Fast and Scalable Software IP Routing Table Lookup, SIGCOMM 2015。
+	\end{itemize}
+	\item 基于forwarding-table.txt数据集(Network, Prefix Length, Port)
+	\begin{itemize}
+		\item 以前缀树查找结果为基准，检查所实现的IP前缀查找是否正确。
+		\item 对比基本前缀树和所实现IP前缀查找的性能，如内存开销、平均单次查找时间等。
+	\end{itemize}
+\end{enumerate}
+
+\section{实验步骤}
+\subsection{简单前缀树查找算法：}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.6\textwidth]{fig/basic_trie.png}
+	\caption{简单前缀树结构示意图}
+\end{figure}
+简单前缀树查找的思路是利用二叉树的结构来存储IP的前缀信息，将节点分为Internal node和Match node两种类型。
+Internal node用于表示没有存储信息的中间节点，Match node用于存储实际的前缀信息和对应的端口号。
+查找过程从根节点开始，根据IP地址的每一位（0或1）沿着树的分支向下遍历，在经过Match node时记录当前的匹配信息，直到抵达叶子节点时
+结束查找，返回最后记录的匹配信息作为结果。
+
+因此，我们需要构建这样一个数据结构来表示前缀树的节点：
+\begin{lstlisting}[language=C]
+typedef struct node{
+    bool type; //I_NODE or M_NODE
+    uint32_t port;
+    struct node* lchild;
+    struct node* rchild;
+}node_t;
+\end{lstlisting}
+
+该数据结构包含节点类型、端口号以及左右子节点的指针。接下来，我们需要实现树的构建和查找功能。
+
+首先是树的构建函数create_tree：
+\begin{lstlisting}[language=C]
+void create_tree(const char* forward_file)
+{
+    FILE* fp = fopen(forward_file, "r");
+    if (fp == NULL) {
+        perror("Failed to open forwarding file");
+        return;
+    }
+
+    uint32_t a, b, c, d, prefix_len, port;
+    
+    while (fscanf(fp, "%u.%u.%u.%u %u %u", &a, &b, &c, &d, &prefix_len, &port) == 6) {
+        uint32_t ip = (a << 24) | (b << 16) | (c << 8) | d;
+        
+        node_t** current = &root_basic;
+        
+        for (int j = 0; j < prefix_len; j++) {
+            int bit = (ip >> (31 - j)) & 1;
+            
+            if (*current == NULL) {
+                *current = new_node();
+            }
+            
+            current = (bit == 0) ? &((*current)->lchild) : &((*current)->rchild);
+        }
+
+        if (*current == NULL) {
+            *current = new_node();
+        }
+        
+        (*current)->type = M_NODE;
+        (*current)->port = port;
+    }
+
+    fclose(fp);
+}
+\end{lstlisting}
+
+由于在输入文件中，ip地址，前缀长度和端口号是以a.b.c.d e f的形式存储的，因此我们按照这种格式读取数据，并将ip地址转换为32位整数。
+然后，根据前缀长度逐位遍历ip地址，构建前缀树。最后，在叶子节点处存储端口号。
+
+随后是查找函数lookup_tree：
+\begin{lstlisting}[language=C]
+uint32_t *lookup_tree(uint32_t* ip_vec)
+{
+    uint32_t* port_vec = (uint32_t*)malloc(sizeof(uint32_t) * TEST_SIZE);
+    if (port_vec == NULL) {
+        perror("Failed to allocate memory for port_vec");
+        return NULL;
+    }
+
+    for (int i = 0; i < TEST_SIZE; i++) {
+        uint32_t ip = ip_vec[i];
+        node_t* current = root_basic;
+        uint32_t last_port = -1; // Default port if no match found
+
+        for (int j = 0; j < 32; j++) {
+            if (current == NULL) {
+                break;
+            }
+
+            if (current->type == M_NODE) {
+                last_port = current->port;
+            }
+
+            int bit = (ip >> (31 - j)) & 1;
+            current = (bit == 0) ? current->lchild : current->rchild;
+        }
+
+        if (current != NULL && current->type == M_NODE) {
+            last_port = current->port;
+        }
+        
+        port_vec[i] = last_port;
+    }
+
+    return port_vec;
+}
+\end{lstlisting}
+
+该函数接受一个IP地址数组作为输入，逐个查找每个IP地址在前缀树中的匹配端口号。查找过程中，记录最后一个匹配的端口号，
+并将结果存储在输出数组中返回。这样做的目的是为了可能存在的Match node接着Match node的情况，确保返回最长前缀匹配的结果。
+
+\subsection{Poptrie方法优化前缀树查找：}
+Poptrie方法来自于所给的论文，其主要思想是通过三个思想：
+\begin{itemize}
+	\item 使用位图和紧凑数组来表示前缀树的节点，从而减少内存占用。
+	\item 引入Leaf Compression 压缩叶子节点，减少查找路径长度。
+	\item 利用Direct Pointing ，使用大数组直接指向叶子节点，减少查找时间。
+\end{itemize}
+
+我们需要从这三个方面分别实现Poptrie方法。
+
+首先，根据这个想法，我们需要设计一个数据结构来表示Poptrie的节点：
+\begin{lstlisting}[language=C]
+typedef struct {
+    uint64_t vector;
+    uint64_t leafvec;
+    uint32_t base1;
+    uint32_t base0;
+} __attribute__((packed)) poptrie_node_t;
+\end{lstlisting}
+
+该结构包含位图和基址信息，用于表示节点的子节点和叶子节点。这里我们说明一下使用位图的原因：
+
+由于实际情况中，前缀树的节点通常是稀疏分布的，如果还是使用传统的指针方式存储子节点，会浪费大量内存。
+因此，我们只需要一个64位的位图用于表示子节点的存在情况，同时将子节点的信息存储在一个紧凑的数组中，
+当我们需要查询的时候，是需要使用位图指令popcnt来计算前面有多少个子节点，从而定位到紧凑数组中的位置。
+一方面这个指令的计算速度非常快，另一方面也大大节省了内存。
+
+此处使用packed属性是为了强制紧凑排列，避免编译器对结构体进行对齐填充，从而减少内存占用。使用64位
+位图是因为寄存器通常是64位的，这样可以充分利用寄存器的位宽，提高查询效率，同时也可以尽可能减少树的高度。
+
+同理对于leafvec，是为了压缩叶子节点，避免连续的节点指向同一个端口号。
+此外，我们还需要一个大数组用于direct_array用来快速查找前18位前缀对应的节点。
+还要一个总的数据结构来存储Poptrie树的信息：
+\begin{lstlisting}[language=C]
+typedef struct{
+    direct_ptr_t* direct_array;
+    int s;  
+
+    poptrie_node_t* nodes;
+    uint32_t node_count;
+    uint32_t node_capacity;
+
+    poptrie_leaf_t* leaves;
+    uint32_t leaf_count;
+    uint32_t leaf_capacity;
+} poptrie_t;
+\end{lstlisting}
+
+接下来是Poptrie树的初始化，此处注意需要将capacity初始化为一个较大的值，不然后续还需要动态扩展。这里
+由于给出的数据集条目比较多，因此设置为2000000。
+
+对于Poptrie树的构建，比查找复杂很多。我们先调用前面的简单前缀树构建函数，得到一个完整的前缀树。然后把这个树
+转换为Poptrie树，这是一个递归的过程。
+
+从根节点出发，对于depth小于18的节点，我们将其存储在direct_array中，并用最高位标记该节点是
+Internal node还是Match node。对于depth大于等于18的节点，我们需要构建Poptrie节点，注意这里由于是64叉树
+，因此需要向下探6层。在构建Poptrie节点时，需要按 64 叉树向后预取二叉树的 6 层结构，
+据此生成 vector 位图来标记哪些分叉拥有子节点，同时生成 leafvec 位图来识别并压缩那些指向相同端口号的连续叶子节点。
+随后，利用 popcnt 指令计算这两个位图中 1 的数量，从而计算出子节点和叶子节点在全局数组中的基址索引
+（base0 和 base1），完成将稀疏的二叉树到紧凑 Poptrie 结构的映射。
+
+对于查找则实现起来相对简单一点。首先按照高18位作为索引在direct_array中查找对应的节点，提取出最高位判断节点类型。
+如果是Match node，则直接返回端口号；如果是Internal node，则去掉最高位，得到Poptrie节点的索引。然后每次取6位作为子节点的索引，
+根据vector位图和base0计算出是否是子节点，若是则继续向下查找，否则根据leafvec和base1计算出端口号，返回。
+
+代码比较长，这里就不全部贴出了，完整代码见文件。
+
+\section{实验结果和分析}
+\subsection{平均查找时间}
+单次实验结果如下图所示：
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{fig/result.png}
+	\caption{实验结果}
+\end{figure}
+
+为保证结果的准确性，实验中我们多次运行查找函数，并取平均值作为最终结果。
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{fig/average_result.png}
+	\caption{多次实验结果平均值}
+\end{figure}
+
+重复执行50次，得到均值如下：
+\begin{itemize}
+	\item 基本前缀树查找平均时间：18638us
+	\item Poptrie前缀树查找平均时间：2096us
+\end{itemize}
+
+可以看到，Poptrie方法相比于基本前缀树查找有了显著的提升，达到了近9倍的加速效果。
+\subsection{内存开销}
+\subsubsection{basic}
+单个节点大小为 $8 + 8 + 8 = 24$ 字节（type + port + 2个指针），测试集大约70万条路由，又由于大量的路由是有公共前缀的，
+估计节点数大约在路由条目的2倍，因此内存开销大约在 $24 * 140$万 = $33.6$MB 到 $24 * 210$万 = $50.4$MB 之间。
+\subsubsection{Poptrie}
+direct_array 大小为 $2^{18} \times 4 = 1$MB；
+
+poptrie_node_t 大小为 $8 + 8 + 4 + 4 = 24$ 字节，参考论文数据，对于 50-70 万路由，Poptrie 节点数大约在 100,000 - 150,000 之间，
+因此内存开销大约在 $24 \times 15$万 = $3.6$MB；
+
+poptrie_leaf_t 大小为 4 字节，虽然原始路由有 70 万条，但经过 leafvec 压缩后，实际存储的独立叶子数会大幅减少。
+保守估算约 300,000 个叶子节点。此时开销大约为 $4 \times 30$万 = $1.2$MB。
+故总的内存开销约为 1MB + 3.6MB + 1.2MB = 5.8MB。
+可以看出，Poptrie 方法在内存开销上也有显著优势，大约是基本前缀树的十分之一左右。
+
+\section{实验中遇到的问题}
+
+在代码实现的过程中，主要遇到了两个小问题：
+\begin{itemize}
+	\item 第一个是在初始化Poptrie树时，忘记将capacity初始化为一个较大的值，后续动态分配时也并没有检查容量，导致数组越界，报错segmentation fault。
+	\item 第二个是在构建Poptrie节点时，默认输出端口号设置的是0而不是未查找到的标志-1，导致查找结果错误。通过输出报错位置的ip值和路由表进行比对，发现问题所在并修正。
+\end{itemize}
+
+\end{document}
+

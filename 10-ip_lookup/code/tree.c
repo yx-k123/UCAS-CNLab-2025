@@ -291,6 +291,7 @@ uint32_t *lookup_tree_advance(uint32_t* ip_vec)
         poptrie_node_t* curr = &poptrie.nodes[node_idx];
         
         int current_bit = DIRECT_BITS; 
+        bool found = false;
         while (current_bit < 32) {
             // Extract next 6 bits (or fewer if near end)
             uint32_t chunk = (ip << current_bit) >> (32 - STRIDE);
@@ -309,12 +310,13 @@ uint32_t *lookup_tree_advance(uint32_t* ip_vec)
                     port_vec[i] = poptrie.leaves[curr->base0 + offset - 1];
                 else
                     port_vec[i] = -1; // Should not match here if logic correct
-                goto next_ip;
+                found = true;
+                break;
             }
         }
-        port_vec[i] = -1; // Fallback
-        
-        next_ip:;
+        if (!found) {
+            port_vec[i] = -1; 
+        }
     }
     return port_vec;
 }
