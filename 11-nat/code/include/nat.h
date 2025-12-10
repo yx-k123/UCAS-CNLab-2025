@@ -68,6 +68,11 @@ struct dnat_rule {
 	u16 internal_port;		// port seen in private network
 };
 
+typedef struct {
+    u32 ip;
+    u16 port;
+} rmt_set_t;
+
 void nat_init(const char *config_file);
 void nat_exit();
 void nat_translate_packet(iface_info_t *iface, char *packet, int len);

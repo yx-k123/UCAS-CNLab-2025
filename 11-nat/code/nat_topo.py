@@ -74,5 +74,12 @@ if __name__ == '__main__':
     n1.cmd('./scripts/disable_ipv6.sh')
 
     net.start()
+    # snat
+    n1.cmd('./nat exp1.conf > ./log/nat.log 2>&1 &')
+    h3.cmd('tcpdump -i h3-eth0 -w ./log/h3_tcpdump.pcap &')
+    h1.cmd('tcpdump -i h1-eth0 -w ./log/h1_tcpdump.pcap &')
+    h3.cmd('python3 ./http_server.py > ./log/http_server.log 2>&1 &')
+    h1.cmd('wget http://159.226.39.123:8000 > ./log/h1_wget.log 2>&1 &')
+    h2.cmd('wget http://159.226.39.123:8000 > ./log/h2_wget.log 2>&1 &')
     CLI(net)
     net.stop()
