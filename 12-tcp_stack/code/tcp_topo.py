@@ -16,7 +16,7 @@ def check_scripts():
     
     for fname in glob.glob(dir + '/' + 'scripts/*.sh'):
         if not os.access(fname, os.X_OK):
-            print '%s should be set executable by using `chmod +x $script_name`' % (fname)
+            print ('%s should be set executable by using `chmod +x $script_name`' % (fname))
             sys.exit(1)
 
     for program in script_deps:
@@ -27,7 +27,7 @@ def check_scripts():
                 found = True
                 break
         if not found:
-            print '`%s` is required but missing, which could be installed via `apt` or `aptitude`' % (program)
+            print ('`%s` is required but missing, which could be installed via `apt` or `aptitude`' % (program))
             sys.exit(2)
 
 class TCPTopo(Topo):
@@ -54,7 +54,20 @@ if __name__ == '__main__':
         h.cmd('scripts/disable_tcp_rst.sh')
         # XXX: If you want to run user-level stack, you should execute 
         # disable_[arp,icmp,ip_forward].sh first. 
+    # h1.cmd('scripts/disable_arp.sh')
+    # h1.cmd('scripts/disable_icmp.sh')
+    # h1.cmd('scripts/disable_ip_forward.sh')
+    # h2.cmd('scripts/disable_arp.sh')
+    # h2.cmd('scripts/disable_icmp.sh')
+    # h2.cmd('scripts/disable_ip_forward.sh')
 
     net.start()
+    h1.cmd('tcpdump -i h1-eth0 -w ./log/capture_echo.pcap &')
+    h1.cmd('./tcp_stack server 10001 > ./log/server_log_echo 2>&1 &')
+    h2.cmd('./tcp_stack client 10.0.0.1 10001 > ./log/client_log_echo 2>&1 &')
+    # h1.cmd('python3 tcp_stack_trans.py server 10001 > ./log/server_log_echo 2>&1 &')
+    # h2.cmd('./tcp_stack client 10.0.0.1 10001 > ./log/client_log_echo 2>&1 &')
+    # h1.cmd('./tcp_stack server 10001 > ./log/server_log_echo 2>&1 &')
+    # h2.cmd('python3 tcp_stack_trans.py client 10.0.0.1 10001 > ./log/client_log_echo 2>&1 &')
     CLI(net)
     net.stop()

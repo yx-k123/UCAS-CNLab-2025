@@ -28,11 +28,14 @@ def server(port):
         if data:
             if PYVER == 3:
                 data = "server echoes: " + data.decode()
+                print(data)
                 cs.send(data.encode())
             else:
                 data = 'server echoes: ' + data
+                print(data)
                 cs.send(data)
         else:
+            print("Connection closed by client")
             break
     
     s.close()

@@ -1,0 +1,8 @@
+DEBUG: find the following interfaces:  h2-eth0.
+Routing table of 1 entries has been loaded.
+DEBUG: 10.0.0.2:12345 switch state, from CLOSED to SYN_SENT.
+DEBUG: 10.0.0.2:12345 switch state, from SYN_SENT to ESTABLISHED.
+DEBUG: 10.0.0.2:12345 switch state, from ESTABLISHED to FIN_WAIT-1.
+DEBUG: 10.0.0.2:12345 switch state, from FIN_WAIT-1 to FIN_WAIT-2.
+DEBUG: 10.0.0.2:12345 switch state, from FIN_WAIT-2 to TIME_WAIT.
+DEBUG: 10.0.0.2:12345 switch state, from TIME_WAIT to CLOSED.
