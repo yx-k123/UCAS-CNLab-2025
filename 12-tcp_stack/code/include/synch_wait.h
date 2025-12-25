@@ -74,7 +74,7 @@ unlock:
 // allocate a wait struct 
 static inline struct synch_wait *alloc_wait_struct()
 {
-	struct synch_wait *wait = malloc(sizeof(struct synch_wait));
+	struct synch_wait *wait = (struct synch_wait *)malloc(sizeof(struct synch_wait));
 	wait_init(wait);
 
 	return wait;

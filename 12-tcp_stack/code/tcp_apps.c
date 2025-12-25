@@ -1,6 +1,6 @@
-#include "tcp_sock.h"
+#include "include/tcp_sock.h"
 
-#include "log.h"
+#include "include/log.h"
 
 #include <unistd.h>
 

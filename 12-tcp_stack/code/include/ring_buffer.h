@@ -16,7 +16,7 @@ static inline struct ring_buffer *alloc_ring_buffer(int size)
 {
 	// there is always one byte which should not be read or written
 	int tot_size = sizeof(struct ring_buffer) + size + 1;
-	struct ring_buffer *rbuf = malloc(tot_size);
+	struct ring_buffer *rbuf = (struct ring_buffer *)malloc(tot_size);
 	memset(rbuf, 0, tot_size);
 	rbuf->size = size + 1;
 

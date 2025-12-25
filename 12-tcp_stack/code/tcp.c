@@ -1,9 +1,8 @@
-#include "ip.h"
-#include "tcp.h"
-#include "tcp_sock.h"
+#include "include/ip.h"
+#include "include/tcp.h"
+#include "include/tcp_sock.h"
 
-#include "log.h"
-
+#include "include/log.h"
 #include <arpa/inet.h>
 
 const char *tcp_state_str[] = { "CLOSED", "LISTEN", "SYN_RECV",

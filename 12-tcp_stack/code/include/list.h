@@ -35,26 +35,26 @@ static inline void init_list_head(struct list_head *list)
 }
 
 // insert a new node between prev and next
-static inline void list_insert(struct list_head *new,
+static inline void list_insert(struct list_head *new_node,
 			      struct list_head *prev,
 			      struct list_head *next)
 {
-	next->prev = new;
-	prev->next = new;
-	new->next = next;
-	new->prev = prev;
+	next->prev = new_node;
+	prev->next = new_node;
+	new_node->next = next;
+	new_node->prev = prev;
 }
 
 // add a list node at the head of the list
-static inline void list_add_head(struct list_head *new, struct list_head *head)
+static inline void list_add_head(struct list_head *new_node, struct list_head *head)
 {
-	list_insert(new, head, head->next);
+	list_insert(new_node, head, head->next);
 }
 
 // add a list node at the tail of the list 
-static inline void list_add_tail(struct list_head *new, struct list_head *head)
+static inline void list_add_tail(struct list_head *new_node, struct list_head *head)
 {
-	list_insert(new, head->prev, head);
+	list_insert(new_node, head->prev, head);
 }
 
 // delete the node from the list (note that it only remove the entry from 
