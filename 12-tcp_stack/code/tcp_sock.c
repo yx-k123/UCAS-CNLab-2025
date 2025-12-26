@@ -19,9 +19,9 @@ struct tcp_hash_table tcp_sock_table;
 
 inline void tcp_set_state(struct tcp_sock *tsk, int state)
 {
-	// log(DEBUG, IP_FMT":%hu switch state, from %s to %s.", \
-	// 		HOST_IP_FMT_STR(tsk->sk_sip), tsk->sk_sport, \
-	// 		tcp_state_str[tsk->state], tcp_state_str[state]);
+	log(DEBUG, IP_FMT":%hu switch state, from %s to %s.", \
+			HOST_IP_FMT_STR(tsk->sk_sip), tsk->sk_sport, \
+			tcp_state_str[tsk->state], tcp_state_str[state]);
 	tsk->state = state;
 }
 
@@ -262,7 +262,7 @@ int tcp_sock_connect(struct tcp_sock *tsk, struct sock_addr *skaddr)
     tsk->sk_dport = ntohs(skaddr->port);
     tsk->sk_sip = longest_prefix_match(ntohl(skaddr->ip))->iface->ip;
     if (tcp_sock_set_sport(tsk, 0) < 0) {
-        // log(ERROR, "No available port");
+        log(ERROR, "No available port");
         return -1;
     }
 
@@ -290,7 +290,7 @@ int tcp_sock_listen(struct tcp_sock *tsk, int backlog)
 inline int tcp_sock_accept_queue_full(struct tcp_sock *tsk)
 {
 	if (tsk->accept_backlog >= tsk->backlog) {
-		// log(ERROR, "tcp accept queue (%d) is full.", tsk->accept_backlog);
+		log(ERROR, "tcp accept queue (%d) is full.", tsk->accept_backlog);
 		return 1;
 	}
 

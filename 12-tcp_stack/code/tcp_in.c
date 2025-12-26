@@ -37,7 +37,7 @@ static inline int is_tcp_seq_valid(struct tcp_sock *tsk, struct tcp_cb *cb)
 		return 1;
 	}
 	else {
-		// log(ERROR, "received packet with invalid seq, drop it.");
+		log(ERROR, "received packet with invalid seq, drop it.");
 		return 0;
 	}
 }
