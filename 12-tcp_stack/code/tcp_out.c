@@ -68,7 +68,7 @@ void tcp_send_control_packet(struct tcp_sock *tsk, u8 flags)
 	int pkt_size = ETHER_HDR_SIZE + IP_BASE_HDR_SIZE + TCP_BASE_HDR_SIZE;
 	char *packet = malloc(pkt_size);
 	if (!packet) {
-		log(ERROR, "malloc tcp control packet failed.");
+		// log(ERROR, "malloc tcp control packet failed.");
 		return ;
 	}
 
@@ -98,7 +98,7 @@ void tcp_send_reset(struct tcp_cb *cb)
 	int pkt_size = ETHER_HDR_SIZE + IP_BASE_HDR_SIZE + TCP_BASE_HDR_SIZE;
 	char *packet = malloc(pkt_size);
 	if (!packet) {
-		log(ERROR, "malloc tcp control packet failed.");
+		// log(ERROR, "malloc tcp control packet failed.");
 		return ;
 	}
 

@@ -1,10 +1,1 @@
-DEBUG: find the following interfaces:  h1-eth0.
 Routing table of 1 entries has been loaded.
-DEBUG: 0.0.0.0:10001 switch state, from CLOSED to LISTEN.
-DEBUG: listen to port 10001.
-DEBUG: 10.0.0.1:10001 switch state, from LISTEN to SYN_RECV.
-DEBUG: 10.0.0.1:10001 switch state, from SYN_RECV to ESTABLISHED.
-DEBUG: accept a connection.
-DEBUG: 10.0.0.1:10001 switch state, from ESTABLISHED to CLOSE_WAIT.
-DEBUG: 10.0.0.1:10001 switch state, from CLOSE_WAIT to LAST_ACK.
-DEBUG: 10.0.0.1:10001 switch state, from LAST_ACK to CLOSED.

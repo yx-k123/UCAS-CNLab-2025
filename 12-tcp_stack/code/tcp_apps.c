@@ -2,6 +2,7 @@
 
 #include "include/log.h"
 
+#include <stdio.h>
 #include <unistd.h>
 
 // tcp server application, listens to port (specified by arg) and serves only one
@@ -15,20 +16,20 @@ void *tcp_server(void *arg)
     addr.ip = htonl(0);
     addr.port = port;
     if (tcp_sock_bind(tsk, &addr) < 0) {
-        log(ERROR, "tcp_sock bind to port %hu failed", ntohs(port));
+        // log(ERROR, "tcp_sock bind to port %hu failed", ntohs(port));
         exit(1);
     }
 
     if (tcp_sock_listen(tsk, 3) < 0) {
-        log(ERROR, "tcp_sock listen failed");
+        // log(ERROR, "tcp_sock listen failed");
         exit(1);
     }
 
-    log(DEBUG, "listen to port %hu.", ntohs(port));
+    // log(DEBUG, "listen to port %hu.", ntohs(port));
 
     struct tcp_sock *csk = tcp_sock_accept(tsk);
 
-    log(DEBUG, "accept a connection.");
+    // log(DEBUG, "accept a connection.");
 
     char buf[1000];  // 接收缓冲区
     while (1) {
@@ -57,8 +58,8 @@ void *tcp_client(void *arg)
     struct tcp_sock *tsk = alloc_tcp_sock();
 
     if (tcp_sock_connect(tsk, skaddr) < 0) {
-        log(ERROR, "tcp_sock connect to server ("IP_FMT":%hu) failed.", \
-                NET_IP_FMT_STR(skaddr->ip), ntohs(skaddr->port));
+        // log(ERROR, "tcp_sock connect to server ("IP_FMT":%hu) failed.", \
+        //         NET_IP_FMT_STR(skaddr->ip), ntohs(skaddr->port));
         exit(1);
     }
 
@@ -66,7 +67,7 @@ void *tcp_client(void *arg)
     int data_len = strlen(data);
     char buf[1000];  // 接收缓冲区
 
-    for (int i = 0; i < 10; i++) {  // 发送 10 次（不少于 5 次）
+    for (int i = 0; i < 5; i++) {  // 发送 10 次（不少于 5 次）
         // 构造字符串：data[i:] + data[:i+1]
         char new_data[100];
         int len1 = data_len - i;
@@ -74,7 +75,7 @@ void *tcp_client(void *arg)
         memcpy(new_data, data + i, len1);
         memcpy(new_data + len1, data, len2);
         new_data[len1 + len2] = '\0';
-		log(DEBUG, "Client sending: %s", new_data);
+		// log(DEBUG, "Client sending: %s", new_data);
         // 发送数据
         tcp_sock_write(tsk, new_data, strlen(new_data));
 
@@ -82,10 +83,8 @@ void *tcp_client(void *arg)
         int recv_len = tcp_sock_read(tsk, buf, sizeof(buf) - 1);
         if (recv_len > 0) {
             buf[recv_len] = '\0';
-            log(DEBUG, "Received: %s", buf);
+            printf("%s\n",buf);
         }
-
-        sleep(1);  // 间隔 1 秒
     }
 
     tcp_sock_close(tsk);

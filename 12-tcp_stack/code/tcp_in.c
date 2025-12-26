@@ -37,7 +37,7 @@ static inline int is_tcp_seq_valid(struct tcp_sock *tsk, struct tcp_cb *cb)
 		return 1;
 	}
 	else {
-		log(ERROR, "received packet with invalid seq, drop it.");
+		// log(ERROR, "received packet with invalid seq, drop it.");
 		return 0;
 	}
 }
@@ -92,29 +92,30 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet)
 		return;
 	}
 	if(is_tcp_seq_valid(tsk,cb) == 0){
-		return;
-	}
-	if(tsk->state == TCP_ESTABLISHED){
-		if(cb->flags & TCP_PSH && cb->flags & TCP_FIN){
-			write_ring_buffer(tsk->rcv_buf, cb->payload, cb->pl_len);
-			tsk->rcv_wnd = ring_buffer_free(tsk->rcv_buf);
-			tsk->rcv_nxt = cb->seq + cb->pl_len + 1;
-			tcp_send_control_packet(tsk, TCP_ACK);
-			tcp_set_state(tsk, TCP_CLOSE_WAIT);
-			wake_up(tsk->wait_recv);
-		}else if(cb->flags & TCP_PSH){
-			write_ring_buffer(tsk->rcv_buf, cb->payload, cb->pl_len);
-			tsk->rcv_wnd = ring_buffer_free(tsk->rcv_buf);
-			tsk->rcv_nxt = cb->seq + cb->pl_len;
-			tcp_send_control_packet(tsk, TCP_ACK);
-			wake_up(tsk->wait_recv);
-		}else if(cb->flags & TCP_FIN){
-			tsk->rcv_nxt = cb->seq + 1;
-			tcp_send_control_packet(tsk, TCP_ACK);
-			tcp_set_state(tsk, TCP_CLOSE_WAIT);
-			wake_up(tsk->wait_recv);
-		}
-	}else if(tsk->state == TCP_LAST_ACK){
+        return;
+    }
+    if(tsk->state == TCP_ESTABLISHED){
+        if (cb->pl_len > 0 || (cb->flags & TCP_FIN)) {
+            if (cb->seq == tsk->rcv_nxt) {
+                if (cb->pl_len > 0) {
+                    write_ring_buffer(tsk->rcv_buf, cb->payload, cb->pl_len);
+                    tsk->rcv_nxt += cb->pl_len;
+                }
+                
+                if (cb->flags & TCP_FIN) {
+                    tsk->rcv_nxt += 1;
+                    tcp_set_state(tsk, TCP_CLOSE_WAIT);
+                }
+
+                tsk->rcv_wnd = ring_buffer_free(tsk->rcv_buf);
+
+                tcp_send_control_packet(tsk, TCP_ACK);
+                wake_up(tsk->wait_recv);
+            } else {
+                tcp_send_control_packet(tsk, TCP_ACK);
+            }
+        }
+    }else if(tsk->state == TCP_LAST_ACK){
 		if(tcp_head->flags & TCP_ACK){
 			tcp_set_state(tsk, TCP_CLOSED);
 		}
