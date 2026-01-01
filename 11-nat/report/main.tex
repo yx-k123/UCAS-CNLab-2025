@@ -1,0 +1,508 @@
+% 这是中国科学院大学计算机科学与技术专业《计算机组成原理（研讨课）》使用的实验报告 Latex 模板
+% 本模板与 2024 年 2 月 Jun-xiong Ji 完成, 更改自由 Shing-Ho Lin 和 Jun-Xiong Ji 于 2022 年 9 月共同完成的基础物理实验模板
+% 如有任何问题, 请联系: jijunxoing21@mails.ucas.ac.cn
+% This is the LaTeX template for report of Experiment of Computer Organization and Design courses, based on its provided Word template. 
+% This template is completed on Febrary 2024, based on the joint collabration of Shing-Ho Lin and Junxiong Ji in September 2022. 
+% Adding numerous pictures and equations leads to unsatisfying experience in Word. Therefore LaTeX is better. 
+% Feel free to contact me via: jijunxoing21@mails.ucas.ac.cn
+
+\documentclass[11pt]{article}
+
+\usepackage[a4paper]{geometry}
+\geometry{left=2.0cm,right=2.0cm,top=2.5cm,bottom=2.5cm}
+
+\usepackage{ctex} % 支持中文的LaTeX宏包
+\usepackage{amsmath,amsfonts,graphicx,subfigure,amssymb,bm,amsthm,mathrsfs,mathtools,breqn} % 数学公式和符号的宏包集合
+\usepackage{algorithm,algorithmicx} % 算法和伪代码
+\usepackage[noend]{algpseudocode} % 算法和伪代码
+\usepackage{fancyhdr} % 自定义页眉页脚
+\usepackage[framemethod=TikZ]{mdframed} % 创建带边框的框架
+\usepackage{fontspec} % 字体设置
+\usepackage{adjustbox} % 调整盒子大小
+\usepackage{fontsize} % 设置字体大小
+\usepackage{tikz,xcolor} % 绘制图形和使用颜色
+\usepackage{multicol} % 多栏排版
+\usepackage{multirow} % 表格中合并单元格
+\usepackage{pdfpages} % 插入PDF文件
+\usepackage{listings} % 在文档中插入源代码
+\usepackage{wrapfig} % 文字绕排图片
+\usepackage{bigstrut,multirow,rotating} % 支持在表格中使用特殊命令
+\usepackage{booktabs} % 创建美观的表格
+\usepackage{circuitikz} % 绘制电路图
+\usepackage{zhnumber} % 中文序号（用于标题）
+\usepackage{tabularx} % 表格折行
+\usepackage{tikz}
+\usetikzlibrary{positioning} % 加载 positioning 库
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\lstset{
+  frame=tb,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  framerule=1pt,
+  rulecolor=\color{gray!35},
+  backgroundcolor=\color{gray!5},
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+}
+
+% 超链接支持 (一定要在大多数包之后, cleveref 之前)
+% colorlinks=true 使链接文字着色而不是加方框; hidelinks 可去掉颜色
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=magenta]{hyperref}
+
+% 轻松引用, 可以用\cref{}指令直接引用, 自动加前缀. 需要在 hyperref 之后加载
+% 例: 图片label为fig:1  => \cref{fig:1} -> Figure.1; \ref{fig:1} -> 1 (纯数字)
+\usepackage[capitalize]{cleveref}
+% \crefname{section}{Sec.}{Secs.}
+\Crefname{section}{Section}{Sections}
+\Crefname{table}{Table}{Tables}
+\crefname{table}{Table.}{Tabs.}
+
+% \setmainfont{Palatino Linotype.ttf}
+% \setCJKmainfont{SimHei.ttf}
+% \setCJKsansfont{Songti.ttf}
+% \setCJKmonofont{SimSun.ttf}
+\punctstyle{kaiming}
+% 偏好的几个字体, 可以根据需要自行加入字体ttf文件并调用
+
+\renewcommand{\emph}[1]{\begin{kaishu}#1\end{kaishu}}
+
+% 对 section 等环境的序号使用中文
+\renewcommand \thesection{\zhnum{section}、}
+\renewcommand \thesubsection{\arabic{section}.\arabic{subsection}}
+
+\tikzset{
+    link/.style={draw, thick, -stealth} % 定义 link 样式，包含绘制、粗线条和箭头
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%改这里可以修改实验报告表头的信息
+\newcommand{\name}{寇逸欣}
+\newcommand{\studentNum}{2023K8009922004}
+\newcommand{\major}{计算机科学与技术}
+\newcommand{\labNum}{11}
+\newcommand{\labName}{网络地址转换实验}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\input{tex_file/head.tex}
+
+\section{实验内容}
+\begin{enumerate}
+	\item SNAT实验
+	\begin{enumerate}
+        \item 运行给定网络拓扑(nat_topo.py)
+        \item 在n1, h1, h2, h3上运行相应脚本
+        \begin{enumerate}
+            \item n1: disable_arp.sh, disable_icmp.sh, disable_ip_forward.sh, disable_ipv6.sh
+            \item h1-h3: disable_offloading.sh, disable_ipv6.sh
+        \end{enumerate}
+            \item 在n1上运行nat程序：  n1\# ./nat exp1.conf
+        \item 在h3上运行HTTP服务：h3\# python3 ./http_server.py
+        \item 在h1, h2上分别访问h3的HTTP服务
+        \begin{enumerate}
+            \item h1\# wget http://159.226.39.123:8000
+            \item h2\# wget http://159.226.39.123:8000
+        \end{enumerate}
+    \end{enumerate}
+    \item DNAT实验
+    \begin{enumerate}
+        \item 运行给定网络拓扑(nat_topo.py)
+        \item 在n1, h1, h2, h3上运行相应脚本
+        \begin{enumerate}
+            \item n1: disable_arp.sh, disable_icmp.sh, disable_ip_forward.sh, disable_ipv6.sh
+            \item h1-h3: disable_offloading.sh, disable_ipv6.sh
+        \end{enumerate}
+        \item 在n1上运行nat程序：  n1\# ./nat exp2.conf
+        \item 在h1, h2上分别运行HTTP Server：   h1/h2\# python3 ./http_server.py
+        \item 在h3上分别请求h1, h2页面
+        \begin{enumerate}
+            \item h3\# wget http://159.226.39.43:8000
+            \item h3\# wget http://159.226.39.43:8001
+        \end{enumerate}
+    \end{enumerate}
+    \item 手动构造一个包含两个nat的拓扑
+    \begin{enumerate}
+        \item h1 <-> n1 <-> n2 <-> h2
+        \item 节点n1作为SNAT， n2作为DNAT，主机h2提供HTTP服务，主机h1穿过两个nat连接到h2并获取相应页面
+    \end{enumerate}
+\end{enumerate}
+
+\section{实验步骤}
+本次实验主要需要补全的代码部分在nat.c中，主要包括以下几个函数：
+\begin{enumerate}
+    \item get\_packet\_direction： 根据判断数据包的方向
+    \item do\_translation： 进行NAT转换
+    \item nat\_timeout： 清除超时的NAT映射表项
+    \item parse\_config： 解析配置文件
+    \item nat\_exit： 释放NAT相关资源
+\end{enumerate}
+
+\subsection{判断数据包方向}
+对于传入的数据包，我们通过解析IP头部和路由表匹配来确定数据包是从内部接口（internal_iface）发出（DIR_OUT）还是从外部接口（external_iface）接收（DIR_IN）。如果无法匹配，则返回DIR_INVALID，表示方向无效。
+\begin{lstlisting}[language=C, caption=get_packet_direction函数代码实现]
+static int get_packet_direction(char *packet)
+{
+	//fprintf(stdout, "TODO: determine the direction of this packet.\n");
+	struct iphdr *ip = packet_to_ip_hdr(packet);
+	rt_entry_t *rt = longest_prefix_match(ntohl(ip->saddr));
+
+	if (rt->iface->index == nat.internal_iface->index) {
+		return DIR_OUT;
+	} else if (rt->iface->index == nat.external_iface->index) {
+		return DIR_IN;
+	}
+
+	return DIR_INVALID;
+}
+\end{lstlisting}
+
+\subsection{进行NAT转换}
+在进行NAT转换的过程中，首先需要提取IP头部和TCP头部，以便获取数据包的关键信息。函数通过调用packet_to_ip_hdr(packet)和packet_to_tcp_hdr(packet)来解析这些头部。随后，根据数据包的方向（DIR_IN或DIR_OUT）获取相应的端口号和IP地址。例如，对于入站数据包，使用源IP地址和源端口；对于出站数据包，使用目的IP地址和目的端口。具体代码如下：
+
+\begin{lstlisting}[language=C]
+struct iphdr *ip = packet_to_ip_hdr(packet);
+struct tcphdr *tcp = packet_to_tcp_hdr(packet);
+
+// 获取当前数据包信息（主机序）
+u32 saddr = ntohl(ip->saddr);
+u32 daddr = ntohl(ip->daddr);
+u16 sport = ntohs(tcp->sport);
+u16 dport = ntohs(tcp->dport);
+\end{lstlisting}
+
+由于NAT可能需要同时维护数万条映射关系，链表查找方式效率很低，因此考虑使用哈希方式。在原代码中也提供了一种哈希函数，使用该哈希函数对远程IP进行映射。代码中通过hash8((char *)\&remote_ip, 4)计算哈希值，然后在对应的哈希桶中查找映射。
+
+\begin{lstlisting}[language=C]
+// 1. 确定 Remote IP/Port 并计算哈希
+u32 remote_ip = (dir == DIR_OUT) ? daddr : saddr;
+u16 remote_port = (dir == DIR_OUT) ? dport : sport;
+
+u8 hash = hash8((char *)&remote_ip, 4);
+struct list_head *head = &nat.nat_mapping_list[hash];
+\end{lstlisting}
+
+而后，如果方向是DIR_IN的话，对NAT映射表进行遍历，如果存在外部IP地址和端口符合该数据包目的地址IP地址和端口的，则设置mapping不为NULL。如果mapping不为NULL，则表示可以直接利用该映射，修改TCP头部的目的端口及IP头部的目的IP地址，并更新映射表中的序列号、连接信息的ACK和FIN标志，最后更新时间。
+
+如果mapping为NULL，则遍历DNAT规则表，检查规则对应的外部端口是否被分配，规则的外部IP地址是否与IP头部的目标地址匹配且规则的外部端口是否与TCP头部的目的端口匹配。若满足条件，则按照规则创建新的映射项，并将映射项最终添加到映射表的链表中。最后与mapping不为NULL类似。
+
+\begin{lstlisting}[language=C]
+// 2. 查找现有映射
+list_for_each_entry(entry, head, list) {
+    if (dir == DIR_OUT) {
+    // 出站匹配：源IP/端口（内网） + 对端IP/端口
+        if (entry->internal_ip == saddr && entry->internal_port == sport &&
+            entry->remote_ip == remote_ip && entry->remote_port == remote_port) {
+            mapping = entry;
+            break;
+        }
+    } else { // DIR_IN
+        // 入站匹配：目的IP/端口（公网） + 对端IP/端口
+        if (entry->external_ip == daddr && entry->external_port == dport &&
+            entry->remote_ip == remote_ip && entry->remote_port == remote_port) {
+            mapping = entry;
+            break;
+        }
+    }
+}
+\end{lstlisting}
+
+若数据包方向为DIR_OUT，则同样先寻找到是否有匹配的映射项。若mapping不为NULL，则同样更新映射项的信息，包括内部序列号、ACK、FIN标志等。如果未找到匹配的映射项，说明是新的连接，需要分配一个外部端口，并创建新的映射项。遍历NAT_PORT_MIN到NAT_PORT_MAX的端口号，找到第一个未被分配的端口。如果找到可用端口，将其标记为已分配，并将新的映射项的信息设置为新分配的端口和出站方向数据包的源IP和源端口。而后也更新映射表的信息。
+
+\begin{lstlisting}[language=C]
+// 3. 处理映射未找到的情况 (Miss)
+if (mapping == NULL) {
+    if (dir == DIR_OUT) {
+        // SNAT: 分配新端口并建立映射
+        int i;
+        u16 assigned_port = 0;
+        for (i = NAT_PORT_MIN; i <= NAT_PORT_MAX; i++) {
+            if (nat.assigned_ports[i] == 0) {
+                nat.assigned_ports[i] = 1;
+                assigned_port = i;
+                break;
+            }
+        }
+        // ... 创建新映射 ...
+    } else { // DIR_IN
+        // DNAT: 查找匹配的DNAT规则
+        // ... 遍历规则并创建映射 ...
+    }
+}
+\end{lstlisting}
+
+最终，更新连接状态后，执行地址转换：对于出站数据包，修改源IP和源端口；对于入站数据包，修改目的IP和目的端口。然后重算IP校验和和TCP校验和，最后发送数据包。
+
+\begin{lstlisting}[language=C]
+// 4. 更新连接状态 (SEQ/ACK/FIN)
+// ... 更新代码 ...
+
+// 5. 执行地址转换
+if (dir == DIR_OUT) {
+    ip->saddr = htonl(mapping->external_ip);
+    tcp->sport = htons(mapping->external_port);
+} else {
+    ip->daddr = htonl(mapping->internal_ip);
+    tcp->dport = htons(mapping->internal_port);
+}
+
+ip->checksum = ip_checksum(ip);
+tcp->checksum = tcp_checksum(ip, tcp);
+
+ip_send_packet(packet, len);
+\end{lstlisting}
+
+\subsection{清除超时的NAT映射表项}
+
+nat_timeout 函数是一个后台线程函数，用于定期清除超时的NAT映射表项，以避免内存泄漏和端口耗尽。该函数在一个无限循环中运行，每秒执行一次清理操作。首先，函数锁定互斥锁以确保线程安全，然后获取当前时间。
+
+\begin{lstlisting}[language=C]
+void *nat_timeout()
+{
+    while (1) {
+        pthread_mutex_lock(&nat.lock);
+        time_t now = time(NULL);
+        // ... 遍历和清理 ...
+        pthread_mutex_unlock(&nat.lock);
+        sleep(1);
+    }
+    return NULL;
+}
+\end{lstlisting}
+
+函数遍历所有哈希桶（从0到HASH_8BITS-1），对于每个哈希桶的链表，使用list_for_each_entry_safe安全地遍历映射项。对于每个映射项，检查是否满足清理条件：连接是否已完成（通过is_flow_finished(\&mapping->conn)判断）或自上次更新以来是否超过TCP_ESTABLISHED_TIMEOUT秒。
+
+\begin{lstlisting}[language=C]
+for (int i = 0; i < HASH_8BITS; i++) {
+    struct list_head *head = &nat.nat_mapping_list[i];
+    struct nat_mapping *mapping, *q;
+    list_for_each_entry_safe(mapping, q, head, list) {
+        if (is_flow_finished(&mapping->conn) || \
+            (now - mapping->update_time >= TCP_ESTABLISHED_TIMEOUT)) {
+            // ... 清理操作 ...
+        }
+    }
+}
+\end{lstlisting}
+
+如果满足条件，则释放分配的端口（如果外部端口在NAT_PORT_MIN到NAT_PORT_MAX范围内，将其标记为未分配），然后从链表中移除映射项并释放内存。最后，解锁互斥锁并睡眠1秒，等待下一次清理。
+
+\begin{lstlisting}[language=C]
+if (mapping->external_port >= NAT_PORT_MIN && mapping->external_port <= NAT_PORT_MAX) {
+    nat.assigned_ports[mapping->external_port] = 0;
+}
+list_delete_entry(&mapping->list);
+free(mapping);
+\end{lstlisting}
+
+\subsection{解析配置文件}
+
+parse_config 函数用于解析NAT配置文件，包括内部接口、外部接口以及DNAT规则。该函数打开指定的配置文件，逐行读取并解析内容。首先，函数使用fopen以二进制模式打开文件，然后进入循环读取每一行，直到文件结束或出错。
+
+\begin{lstlisting}[language=C]
+int parse_config(const char *filename)
+{
+    char line[256];
+    FILE *fp = fopen(filename, "rb");
+    char type[128], name[128], exter[64], inter[64];
+    // ... 解析接口 ...
+    // ... 解析规则 ...
+    return 0;
+}
+\end{lstlisting}
+
+在第一个循环中，函数读取配置文件的接口部分，使用sscanf解析每一行的类型和名称。如果类型为"internal-iface"，则通过if_name_to_iface获取内部接口并赋值给nat.internal_iface；如果类型为"external-iface"，则获取外部接口并赋值给nat.external_iface。如果解析失败，则输出错误信息。
+
+\begin{lstlisting}[language=C]
+while (!feof(fp) && !ferror(fp)) {
+    strcpy(line, "\n");
+    fgets(line, sizeof(line), fp);
+    if (line[0] == '\n') break;
+    sscanf(line, "%s %s", type, name);
+    type[14] = '\0';
+    if (strcmp(type, "internal-iface") == 0) {
+        printf("Internal-iface: %s .\n", name);
+        nat.internal_iface = if_name_to_iface(name);
+    } else if (strcmp(type, "external-iface") == 0) {
+        printf("External-iface: %s .\n", name);
+        nat.external_iface = if_name_to_iface(name);
+    } else printf("config iface failed : %s .\n", type);
+}
+\end{lstlisting}
+
+在第二个循环中，函数读取DNAT规则部分。对于每一行，如果类型为"dnat-rules"，则分配新的dnat_rule结构体并添加到nat.rules链表中。然后，解析外部IP和端口：使用sscanf提取IP字符串和端口号，再将IP字符串转换为u32格式（通过位移运算组合四个字节）。同样解析内部IP和端口，并输出调试信息。如果解析失败，则输出错误信息。
+
+\begin{lstlisting}[language=C]
+u32 ip4, ip3, ip2, ip1, ip;
+u16 port;
+while (!feof(fp) && !ferror(fp)) {
+    strcpy(line, "\n");
+    fgets(line, sizeof(line), fp);
+    if (line[0] == '\n') break;
+    sscanf(line, "%s %s %s %s", type, exter, name, inter);
+    type[10] = '\0';
+    if (strcmp(type, "dnat-rules") == 0) {
+        // ... 分配和解析规则 ...
+        sscanf(exter, "%[^:]:%hu", name, &port);
+        sscanf(name, "%u.%u.%u.%u", &ip4, &ip3, &ip2, &ip1);
+        ip = (ip4 << 24) | (ip3 << 16) | (ip2 << 8) | (ip1);
+        rule->external_ip = ip;
+        rule->external_port = port;
+        // ... 类似解析内部 ...
+    } else printf("config rules failed : %s .\n", type);
+}
+\end{lstlisting}
+
+\subsection{释放NAT相关资源}
+
+nat_exit 函数用于在程序退出时释放所有分配的NAT相关资源，包括映射表项和后台线程。该函数首先锁定互斥锁以确保线程安全，然后遍历所有哈希桶（从0到HASH_8BITS-1），对于每个哈希桶的链表，使用list_for_each_entry_safe安全地遍历并释放映射项。
+
+\begin{lstlisting}[language=C]
+void nat_exit()
+{
+    pthread_mutex_lock(&nat.lock);
+    for (int i = 0; i < HASH_8BITS; i++) {
+        struct nat_mapping *entry, *q;
+        list_for_each_entry_safe(entry, q, &nat.nat_mapping_list[i], list) {
+            list_delete_entry(&entry->list);
+            free(entry);
+        }
+    }
+
+    pthread_kill(nat.thread, SIGTERM);
+    pthread_mutex_unlock(&nat.lock);
+}
+\end{lstlisting}
+
+对于每个映射项，函数从链表中移除并释放内存。然后，函数向后台线程（nat.thread）发送SIGTERM信号以终止线程。最后，解锁互斥锁。这种设计确保了资源完全释放，避免内存泄漏和线程残留。
+
+\section{实验结果}
+\subsection{实验一：SNAT实验}
+在h1和h2上分别运行wget命令访问h3的HTTP服务，成功获取页面，说明SNAT功能正常工作。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/h1_snat.png}
+    \includegraphics[width=0.8\textwidth]{fig/h2_snat.png}
+    \includegraphics[width=0.8\textwidth]{fig/h3_snat.png}
+    \includegraphics[width=0.8\textwidth]{fig/n1_snat.png}
+    \caption{SNAT实验结果}
+\end{figure}
+
+\subsection{实验二：DNAT实验}
+在h3上分别运行wget命令访问h1和h2的HTTP服务，成功获取页面，说明DNAT功能正常工作。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/h3_dnat_8000.png}
+    \includegraphics[width=0.8\textwidth]{fig/h3_dnat_8001.png}
+    \includegraphics[width=0.8\textwidth]{fig/h1_dnat.png}
+    \includegraphics[width=0.8\textwidth]{fig/h2_dnat.png}
+    \includegraphics[width=0.8\textwidth]{fig/n1_dnat.png}
+    \caption{DNAT实验结果}
+\end{figure}
+
+\subsection{实验三：自建双NAT拓扑实验}
+网络拓扑构建如下：
+\begin{lstlisting}[language=python]
+...
+class myTopo(Topo):
+    def build(self):
+        h1 = self.addHost('h1')
+        h2 = self.addHost('h2')
+        n1 = self.addHost('n1')
+        n2 = self.addHost('n2')
+
+        # h1-eth0 <-> n1-eth0
+        self.addLink(h1, n1)
+        # n1-eth1 <-> n2-eth0
+        self.addLink(n1, n2)
+        # n2-eth1 <-> h2-eth0
+        self.addLink(n2, h2)
+
+if __name__ == '__main__':
+    check_scripts()
+
+    topo = myTopo()
+    net = Mininet(topo = topo, switch = OVSBridge, controller = None)
+    h1, h2, n1, n2 = net.get('h1', 'h2', 'n1', 'n2')
+
+    # ====== IP & 路由配置 ======
+
+    # 内网 A：h1 <-> n1
+    h1.cmd('ifconfig h1-eth0 10.21.0.1/16')
+    h1.cmd('route add default gw 10.21.0.254')
+    n1.cmd('ifconfig n1-eth0 10.21.0.254/16')
+
+    # 中间网：n1 <-> n2
+    n1.cmd('ifconfig n1-eth1 159.226.39.43/24')
+    n2.cmd('ifconfig n2-eth0 159.226.39.44/24')
+
+    # 内网 B：n2 <-> h2
+    h2.cmd('ifconfig h2-eth0 10.22.0.1/16')
+    h2.cmd('route add default gw 10.22.0.254')
+    n2.cmd('ifconfig n2-eth1 10.22.0.254/16')
+
+    # ====== 关闭内核协议栈功能，交给用户态 NAT ======
+    for n in (n1, n2):
+        n.cmd('./scripts/disable_arp.sh')
+        n.cmd('./scripts/disable_icmp.sh')
+        n.cmd('./scripts/disable_ip_forward.sh')
+        n.cmd('./scripts/disable_ipv6.sh')
+
+    for node in (h1, h2, n1, n2):
+        node.cmd('./scripts/disable_offloading.sh')
+        node.cmd('./scripts/disable_ipv6.sh')
+
+    net.start()
+
+    # ====== 启动 NAT / HTTP / 客户端请求 ======
+    # n1: SNAT
+    n1.cmd('./nat n1.conf > ./log/n1_snat_3.log 2>&1 &')
+    # n2: DNAT
+    n2.cmd('./nat n2.conf > ./log/n2_dnat_3.log 2>&1 &')
+    # h2: HTTP server
+    h2.cmd('python3 ./http_server.py > ./log/h2_http_3.log 2>&1 &')
+    # h1: 访问 n2 的“公网”地址
+    h1.cmd('wget http://159.226.39.44:8000 > ./log/h1_wget_3.log 2>&1 &')
+
+    CLI(net)
+    net.stop()
+\end{lstlisting}
+
+配置文件如下：
+\begin{lstlisting}
+# n1.conf (SNAT)
+internal-iface: n1-eth0
+external-iface: n1-eth1
+
+# n2.conf (DNAT)
+internal-iface: n2-eth1
+external-iface: n2-eth0
+
+dnat-rules: 159.226.39.44:8000 -> 10.22.0.1:8000
+\end{lstlisting}
+
+运行结果如下，h1成功访问h2的HTTP服务，说明双NAT功能正常工作。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/h1_double_nat.png}
+    \includegraphics[width=0.8\textwidth]{fig/h2_double_nat.png}
+    \includegraphics[width=0.8\textwidth]{fig/n1_double_nat.png}
+    \includegraphics[width=0.8\textwidth]{fig/n2_double_nat.png}
+    \caption{双NAT实验结果}
+\end{figure}
+
+\end{document}
+
