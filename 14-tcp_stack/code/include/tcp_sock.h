@@ -14,6 +14,16 @@
 #define PORT_MIN	12345
 #define PORT_MAX	23456
 
+struct data_packet {
+	struct list_head list;
+	u8 flags;
+	u8 times;
+	u32 seq;
+	u32 len;
+	u32 seq_end;
+	char *packet;
+};
+
 struct sock_addr {
 	u32 ip;
 	u16 port;
@@ -79,6 +89,9 @@ struct tcp_sock {
 	struct list_head send_buf;
 	// used to pend out-of-order packets
 	struct list_head rcv_ofo_buf;
+
+	pthread_mutex_t send_buf_lock;
+	pthread_mutex_t rcv_buf_lock;
 
 	// tcp state, see enum tcp_state in tcp.h
 	int state;
@@ -147,5 +160,10 @@ int tcp_sock_read(struct tcp_sock *tsk, char *buf, int len);
 int tcp_sock_write(struct tcp_sock *tsk, char *buf, int len);
 
 struct tcp_sock *alloc_child_tcp_sock(struct tcp_sock *tsk, struct tcp_cb *cb);
+
+struct data_packet *new_data_block(u8 flags, u32 seq, u32 len, char *buf);
+void tcp_rcv_ofo_pkt(struct tcp_sock *tsk, struct tcp_cb *cb);
+void tcp_free_send_buf(struct tcp_sock *tsk, struct tcp_cb *cb);
+void tcp_send_retrans_packet(struct tcp_sock *tsk, struct data_packet *dp);
 
 #endif

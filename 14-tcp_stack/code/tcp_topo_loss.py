@@ -66,5 +66,8 @@ if __name__ == '__main__':
         # disable_[arp,icmp,ip_forward].sh first. 
 
     net.start()
+    h1.cmd('tcpdump -i h1-eth0 -w ./log/capture_file.pcap &')
+    h1.cmd('./tcp_stack server 10001 > ./log/server_log_file 2>&1 &')
+    h2.cmd('./tcp_stack client 10.0.0.1 10001 > ./log/client_log_file 2>&1 &')
     CLI(net)
     net.stop()

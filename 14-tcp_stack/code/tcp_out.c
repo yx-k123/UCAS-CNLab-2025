@@ -9,6 +9,43 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct data_packet *new_data_block(u8 flags, u32 seq, u32 len, char *buf)
+{
+	struct data_packet *dp = (struct data_packet *)malloc(sizeof(struct data_packet));
+	dp->flags = flags;
+	dp->seq = seq;
+	dp->len = len;
+	dp->times = 0;
+	dp->seq_end = seq + len + ((flags & (TCP_SYN|TCP_FIN)) ? 1 : 0);
+	if (len > 0 && buf != NULL) {
+		dp->packet = (char *)malloc(len);
+		memcpy(dp->packet, buf, len);
+	} else {
+		dp->packet = NULL;
+	}
+	init_list_head(&dp->list);
+	return dp;
+}
+
+void tcp_free_send_buf(struct tcp_sock *tsk, struct tcp_cb *cb)
+{
+	struct data_packet *tmp, *q;
+	pthread_mutex_lock(&tsk->send_buf_lock);
+	list_for_each_entry_safe(tmp, q, &tsk->send_buf, list)
+	{
+		if(less_or_equal_32b(tmp->seq_end, cb->ack))
+		{
+			list_delete_entry(&tmp->list);
+			if(tmp->packet) free(tmp->packet);
+			free(tmp);
+			tcp_unset_retrans_timer(tsk);
+			if(!list_empty(&tsk->send_buf))
+				tcp_set_retrans_timer(tsk);
+		}
+	}
+	pthread_mutex_unlock(&tsk->send_buf_lock);
+}
+
 // initialize tcp header according to the arguments
 static void tcp_init_hdr(struct tcphdr *tcp, u16 sport, u16 dport, u32 seq, u32 ack,
 		u8 flags, u16 rwnd)
@@ -85,6 +122,31 @@ void tcp_send_control_packet(struct tcp_sock *tsk, u8 flags)
 
 	if (flags & (TCP_SYN|TCP_FIN))
 		tsk->snd_nxt += 1;
+
+	ip_send_packet(packet, pkt_size);
+}
+
+void tcp_send_retrans_packet(struct tcp_sock *tsk, struct data_packet *dp)
+{
+	int pkt_size = ETHER_HDR_SIZE + IP_BASE_HDR_SIZE + TCP_BASE_HDR_SIZE + dp->len;
+	char *packet = malloc(pkt_size);
+	if (!packet) {
+		log(ERROR, "malloc tcp retrans packet failed.");
+		return ;
+	}
+
+	if (dp->len > 0)
+		memcpy(packet + ETHER_HDR_SIZE + IP_BASE_HDR_SIZE + TCP_BASE_HDR_SIZE, dp->packet, dp->len);
+
+	struct iphdr *ip = packet_to_ip_hdr(packet);
+	struct tcphdr *tcp = (struct tcphdr *)((char *)ip + IP_BASE_HDR_SIZE);
+
+	u16 tot_len = IP_BASE_HDR_SIZE + TCP_BASE_HDR_SIZE + dp->len;
+
+	ip_init_hdr(ip, tsk->sk_sip, tsk->sk_dip, tot_len, IPPROTO_TCP);
+	tcp_init_hdr(tcp, tsk->sk_sport, tsk->sk_dport, dp->seq, tsk->rcv_nxt, dp->flags, tsk->rcv_wnd);
+
+	tcp->checksum = tcp_checksum(ip, tcp);
 
 	ip_send_packet(packet, pkt_size);
 }

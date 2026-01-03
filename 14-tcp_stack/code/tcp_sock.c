@@ -56,6 +56,12 @@ struct tcp_sock *alloc_tcp_sock()
 	init_list_head(&tsk->listen_queue);
 	init_list_head(&tsk->accept_queue);
 
+	init_list_head(&tsk->send_buf);
+	init_list_head(&tsk->rcv_ofo_buf);
+
+	pthread_mutex_init(&tsk->send_buf_lock, NULL);
+	pthread_mutex_init(&tsk->rcv_buf_lock, NULL);
+
 	tsk->rcv_buf = alloc_ring_buffer(tsk->rcv_wnd);
 
 	tsk->wait_connect = alloc_wait_struct();
@@ -77,6 +83,23 @@ void free_tcp_sock(struct tcp_sock *tsk)
 	// fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
 	tsk->ref_cnt -= 1;
 	if (tsk->ref_cnt <= 0) {
+		if (tsk->retrans_timer.enable) list_delete_entry(&tsk->retrans_timer.list);
+		if (tsk->timewait.enable) list_delete_entry(&tsk->timewait.list);
+
+		struct data_packet *dp, *q;
+		list_for_each_entry_safe(dp, q, &tsk->send_buf, list) {
+			list_delete_entry(&dp->list);
+			if(dp->packet) free(dp->packet);
+			free(dp);
+		}
+		list_for_each_entry_safe(dp, q, &tsk->rcv_ofo_buf, list) {
+			list_delete_entry(&dp->list);
+			if(dp->packet) free(dp->packet);
+			free(dp);
+		}
+		pthread_mutex_destroy(&tsk->send_buf_lock);
+		pthread_mutex_destroy(&tsk->rcv_buf_lock);
+
 		free_ring_buffer(tsk->rcv_buf);
 		free_wait_struct(tsk->wait_connect);
 		free_wait_struct(tsk->wait_accept);
@@ -268,7 +291,16 @@ int tcp_sock_connect(struct tcp_sock *tsk, struct sock_addr *skaddr)
 
     tcp_bind_hash(tsk);
 
+	struct data_packet *dp = new_data_block(TCP_SYN, tsk->snd_nxt, 0, NULL);
+	pthread_mutex_lock(&tsk->send_buf_lock);
+	list_add_tail(&dp->list, &tsk->send_buf);
+	pthread_mutex_unlock(&tsk->send_buf_lock);
+
     tcp_send_control_packet(tsk, TCP_SYN);
+
+	if(!tsk->retrans_timer.enable)
+		tcp_set_retrans_timer(tsk);
+
     tcp_set_state(tsk, TCP_SYN_SENT);
     tcp_hash(tsk);
     sleep_on(tsk->wait_connect);
@@ -334,10 +366,28 @@ void tcp_sock_close(struct tcp_sock *tsk)
 {
 	// fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
 	if (tsk->state == TCP_CLOSE_WAIT) {
+		struct data_packet *dp = new_data_block(TCP_FIN|TCP_ACK, tsk->snd_nxt, 0, NULL);
+		pthread_mutex_lock(&tsk->send_buf_lock);
+		list_add_tail(&dp->list, &tsk->send_buf);
+		pthread_mutex_unlock(&tsk->send_buf_lock);
+
 		tcp_send_control_packet(tsk, TCP_FIN | TCP_ACK);
+
+		if(!tsk->retrans_timer.enable)
+			tcp_set_retrans_timer(tsk);
+
 		tcp_set_state(tsk, TCP_LAST_ACK);
 	} else if (tsk->state == TCP_ESTABLISHED) {
+		struct data_packet *dp = new_data_block(TCP_FIN|TCP_ACK, tsk->snd_nxt, 0, NULL);
+		pthread_mutex_lock(&tsk->send_buf_lock);
+		list_add_tail(&dp->list, &tsk->send_buf);
+		pthread_mutex_unlock(&tsk->send_buf_lock);
+
 		tcp_send_control_packet(tsk, TCP_FIN | TCP_ACK);
+
+		if(!tsk->retrans_timer.enable)
+			tcp_set_retrans_timer(tsk);
+
 		tcp_set_state(tsk, TCP_FIN_WAIT_1);
 	} else {
 		tcp_set_state(tsk,TCP_CLOSED);
@@ -354,7 +404,9 @@ int tcp_sock_read(struct tcp_sock *tsk, char *buf, int len)
 		}
 		sleep_on(tsk->wait_recv);
 	}
+	pthread_mutex_lock(&tsk->rcv_buf_lock);
 	int len_read = read_ring_buffer(tsk->rcv_buf, buf, len);
+	pthread_mutex_unlock(&tsk->rcv_buf_lock);
 	return len_read;
 }
 
@@ -364,10 +416,20 @@ int tcp_sock_write(struct tcp_sock *tsk, char *buf, int len)
 	while(len_send != len){
 		data_len = ((len - len_send) < (1514 - ETHER_HDR_SIZE - IP_BASE_HDR_SIZE - TCP_BASE_HDR_SIZE))? (len - len_send) : (1514 - ETHER_HDR_SIZE - IP_BASE_HDR_SIZE - TCP_BASE_HDR_SIZE);
 		while(tsk->snd_una + tsk->snd_wnd < tsk->snd_nxt + data_len) sleep_on(tsk->wait_send);
+		
+		struct data_packet *dp = new_data_block(TCP_PSH|TCP_ACK, tsk->snd_nxt, data_len, buf + len_send);
+		pthread_mutex_lock(&tsk->send_buf_lock);
+		list_add_tail(&dp->list, &tsk->send_buf);
+		pthread_mutex_unlock(&tsk->send_buf_lock);
+
 		packet_len = TCP_BASE_HDR_SIZE + IP_BASE_HDR_SIZE + ETHER_HDR_SIZE + data_len;
 		char * packet = (char *)malloc(packet_len);
 		memcpy(packet + TCP_BASE_HDR_SIZE + IP_BASE_HDR_SIZE + ETHER_HDR_SIZE, buf + len_send, data_len);
 		tcp_send_packet(tsk, packet, packet_len);
+
+		if(!tsk->retrans_timer.enable)
+			tcp_set_retrans_timer(tsk);
+
 		len_send += data_len;
 	}
 	return len;
