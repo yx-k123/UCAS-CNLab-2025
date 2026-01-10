@@ -85,6 +85,7 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet)
 						tsk->cwnd = tsk->ssthresh + 3;
 						tsk->recovery_point = tsk->snd_nxt;
 						tsk->congestion_state = TCP_RECOVERY;
+						tcp_log_cwnd(tsk);
 						if (!list_empty(&tsk->send_buf)) {
 							struct data_packet *dp = list_entry(tsk->send_buf.next, struct data_packet, list);
 							tcp_send_retrans_packet(tsk, dp);
@@ -98,6 +99,7 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet)
 						tsk->cwnd = tsk->ssthresh + 3;
 						tsk->recovery_point = tsk->snd_nxt;
 						tsk->congestion_state = TCP_RECOVERY;
+						tcp_log_cwnd(tsk);
 						if (!list_empty(&tsk->send_buf)) {
 							struct data_packet *dp = list_entry(tsk->send_buf.next, struct data_packet, list);
 							tcp_send_retrans_packet(tsk, dp);
@@ -105,6 +107,7 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet)
 					}
 				} else if (tsk->congestion_state == TCP_RECOVERY) {
 					tsk->cwnd++;
+					tcp_log_cwnd(tsk);
 				}
 			} else {
 				if (tsk->congestion_state == TCP_RECOVERY) {
@@ -120,17 +123,20 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet)
 						tsk->congestion_state = TCP_OPEN;
 						tsk->cwnd = tsk->ssthresh;
 						tsk->dupacks = 0;
+						tcp_log_cwnd(tsk);
 					}
 				} else {
 					tsk->dupacks = 0;
 					tsk->congestion_state = TCP_OPEN;
 					if (tsk->cwnd * TCP_MSS < tsk->ssthresh) {
 						tsk->cwnd++;
+						tcp_log_cwnd(tsk);
 					} else {
 						tsk->cwnd_cnt++;
 						if (tsk->cwnd_cnt >= tsk->cwnd) {
 							tsk->cwnd++;
 							tsk->cwnd_cnt = 0;
+							tcp_log_cwnd(tsk);
 						}
 					}
 				}

@@ -178,4 +178,6 @@ void tcp_rcv_ofo_pkt(struct tcp_sock *tsk, struct tcp_cb *cb);
 void tcp_free_send_buf(struct tcp_sock *tsk, struct tcp_cb *cb);
 void tcp_send_retrans_packet(struct tcp_sock *tsk, struct data_packet *dp);
 
+void tcp_log_cwnd(struct tcp_sock *tsk);
+
 #endif

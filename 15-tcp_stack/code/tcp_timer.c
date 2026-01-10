@@ -6,9 +6,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-#ifndef max
-# define max(x,y) ((x)>(y) ? (x) : (y))
-#endif
+#define max(a, b) ((a) > (b) ? (a) : (b))
 
 static struct list_head timer_list;
 
@@ -61,6 +59,7 @@ void tcp_scan_timer_list()
 						tsk->ssthresh = max(tsk->cwnd / 2, 2);
 						tsk->cwnd = 1;
 						tsk->congestion_state = TCP_LOSS;
+						tcp_log_cwnd(tsk);
 						
 						tcp_send_retrans_packet(tsk, dp);
 						pthread_mutex_unlock(&tsk->send_buf_lock);

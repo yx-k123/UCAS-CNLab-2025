@@ -6,6 +6,8 @@
 #include "include/rtable.h"
 #include "include/log.h"
 
+#include <stdio.h>
+
 // TCP socks should be hashed into table for later lookup: Those which
 // occupy a port (either by *bind* or *connect*) should be hashed into
 // bind_table, those which listen for incoming connection request should be
@@ -440,4 +442,12 @@ int tcp_sock_write(struct tcp_sock *tsk, char *buf, int len)
 		len_send += data_len;
 	}
 	return len;
+}
+
+void tcp_log_cwnd(struct tcp_sock *tsk) {
+	FILE *f = fopen("cwnd_data.txt", "a+");
+	if (f) {
+		fprintf(f, "%lld\t%u\t%u\t%d\n", get_now_us(), tsk->cwnd, tsk->ssthresh, tsk->congestion_state);
+		fclose(f);
+	}
 }
