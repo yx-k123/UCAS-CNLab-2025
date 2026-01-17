@@ -8,6 +8,12 @@
 
 #include <stdio.h>
 
+#ifndef min
+#   define min(x,y) ((x)<(y) ? (x) : (y))
+#endif
+
+#define TCP_MSS 1460
+
 // TCP socks should be hashed into table for later lookup: Those which
 // occupy a port (either by *bind* or *connect*) should be hashed into
 // bind_table, those which listen for incoming connection request should be
@@ -72,7 +78,12 @@ struct tcp_sock *alloc_tcp_sock()
 	tsk->wait_send = alloc_wait_struct();
 
 	tsk->cwnd = 1;
-	tsk->ssthresh = 65535;
+	// Linux Protocol Stack uses packets for cwnd and ssthresh.
+	// Initial ssthresh is usually set to infinity or the receiver window.
+	// Since TCP_DEFAULT_WINDOW is 65535 (64KB), and MSS is 1460:
+	// 65535 / 1460 = 44 packets.
+	tsk->ssthresh = TCP_DEFAULT_WINDOW / TCP_MSS;
+	// tsk->ssthresh = 30; // Alternatively, set a smaller value to avoid massive overshoot in low-bw envs
 	tsk->congestion_state = TCP_OPEN;
 	tsk->dupacks = 0;
 	tsk->cwnd_cnt = 0;

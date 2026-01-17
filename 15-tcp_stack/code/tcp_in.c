@@ -82,7 +82,10 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet)
 				if (tsk->congestion_state == TCP_OPEN) {
 					if (tsk->dupacks == 3) {
 						tsk->ssthresh = max(tsk->cwnd / 2, 2);
-						tsk->cwnd = tsk->ssthresh + 3;
+						// RATE HALVING: Do not cut cwnd immediately to ssthresh + 3.
+						// Maintain current cwnd and reduce gradually to avoid silence.
+						// tsk->cwnd = tsk->ssthresh + 3; 
+						tsk->cwnd_cnt = 0;
 						tsk->recovery_point = tsk->snd_nxt;
 						tsk->congestion_state = TCP_RECOVERY;
 						tcp_log_cwnd(tsk);
@@ -96,7 +99,9 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet)
 				} else if (tsk->congestion_state == TCP_DISORDER) {
 					if (tsk->dupacks == 3) {
 						tsk->ssthresh = max(tsk->cwnd / 2, 2);
-						tsk->cwnd = tsk->ssthresh + 3;
+						// RATE HALVING implementation
+						// tsk->cwnd = tsk->ssthresh + 3;
+						tsk->cwnd_cnt = 0;
 						tsk->recovery_point = tsk->snd_nxt;
 						tsk->congestion_state = TCP_RECOVERY;
 						tcp_log_cwnd(tsk);
@@ -106,10 +111,15 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet)
 						}
 					}
 				} else if (tsk->congestion_state == TCP_RECOVERY) {
-					tsk->cwnd++;
+					// Implement rate halving: decrement 1 MSS for every 2 ACKs
+					tsk->cwnd_cnt++;
+					if (tsk->cwnd_cnt >= 2) {
+						if (tsk->cwnd > 1) tsk->cwnd--;
+						tsk->cwnd_cnt = 0;
+					}
 					tcp_log_cwnd(tsk);
 				}
-			} else {
+			} else if (greater_than_32b(cb->ack, tsk->snd_una)) {
 				if (tsk->congestion_state == TCP_RECOVERY) {
 					if (less_than_32b(cb->ack, tsk->recovery_point)) {
 						struct data_packet *dp;
@@ -128,7 +138,8 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet)
 				} else {
 					tsk->dupacks = 0;
 					tsk->congestion_state = TCP_OPEN;
-					if (tsk->cwnd * TCP_MSS < tsk->ssthresh) {
+					// ssthresh and cwnd are both in packets (Linux implementation)
+					if (tsk->cwnd < tsk->ssthresh) {
 						tsk->cwnd++;
 						tcp_log_cwnd(tsk);
 					} else {

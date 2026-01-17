@@ -20,6 +20,8 @@ def plot_cwnd(log_file):
             lines = f.readlines()
             
         last_state = -1
+        last_t = 0
+        last_cwnd = 0
         
         for line in lines:
             parts = line.strip().split()
@@ -47,13 +49,15 @@ def plot_cwnd(log_file):
             # TCP_LOSS = 3
             
             if state == 2 and last_state != 2: # Entering Recovery -> Fast Retransmit
-                events_fr_x.append(t)
-                events_fr_y.append(cwnd)
+                events_fr_x.append(last_t)
+                events_fr_y.append(last_cwnd)
             elif state == 3 and last_state != 3: # Entering Loss -> Timeout
-                events_to_x.append(t)
-                events_to_y.append(cwnd)
+                events_to_x.append(last_t)
+                events_to_y.append(last_cwnd)
             
             last_state = state
+            last_t = t
+            last_cwnd = cwnd
 
         # Create plot
         plt.figure(figsize=(16, 9))

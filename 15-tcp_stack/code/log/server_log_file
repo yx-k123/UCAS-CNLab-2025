@@ -5,6 +5,7 @@ DEBUG: 10.0.0.1:10001 switch state, from LISTEN to SYN_RECV.
 DEBUG: 10.0.0.1:10001 switch state, from SYN_RECV to ESTABLISHED.
 DEBUG: accept a connection.
 DEBUG: start to receive data.
+ERROR: received packet with invalid seq, drop it.
 DEBUG: 10.0.0.1:10001 switch state, from ESTABLISHED to CLOSE_WAIT.
 DEBUG: 10.0.0.1:10001 switch state, from CLOSE_WAIT to LAST_ACK.
 DEBUG: 10.0.0.1:10001 switch state, from LAST_ACK to CLOSED.
