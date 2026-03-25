@@ -1,1 +1,280 @@
+\documentclass[11pt]{article}
 
+\usepackage[a4paper]{geometry}
+\geometry{left=2.0cm,right=2.0cm,top=2.5cm,bottom=2.5cm}
+
+% Ensure only one \begin{document} and all environments are closed properly
+
+\usepackage{ctex} % 支持中文的LaTeX宏包
+\usepackage{amsmath,amsfonts,graphicx,subfigure,amssymb,bm,amsthm,mathrsfs,mathtools,breqn} % 数学公式和符号的宏包集合
+\usepackage{algorithm,algorithmicx} % 算法和伪代码
+\usepackage[noend]{algpseudocode} % 算法和伪代码
+\usepackage{fancyhdr} % 自定义页眉页脚
+\usepackage[framemethod=TikZ]{mdframed} % 创建带边框的框架
+\usepackage{fontspec} % 字体设置
+\usepackage{adjustbox} % 调整盒子大小
+\usepackage{fontsize} % 设置字体大小
+\usepackage{tikz,xcolor} % 绘制图形和使用颜色
+\usepackage{multicol} % 多栏排版
+\usepackage{multirow} % 表格中合并单元格
+\usepackage{pdfpages} % 插入PDF文件
+\usepackage{listings} % 在文档中插入源代码
+\usepackage{wrapfig} % 文字绕排图片
+\usepackage{bigstrut,multirow,rotating} % 支持在表格中使用特殊命令
+\usepackage{booktabs} % 创建美观的表格
+\usepackage{circuitikz} % 绘制电路图
+\usepackage{zhnumber} % 中文序号（用于标题）
+\usepackage{tabularx} % 表格折行
+\usepackage{tikz}
+\usetikzlibrary{positioning} % 加载 positioning 库
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\lstset{
+  frame=tb,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  framerule=1pt,
+  rulecolor=\color{gray!35},
+  backgroundcolor=\color{gray!5},
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+}
+
+% 超链接支持 (一定要在大多数包之后, cleveref 之前)
+% colorlinks=true 使链接文字着色而不是加方框; hidelinks 可去掉颜色
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=magenta]{hyperref}
+
+% 轻松引用, 可以用\cref{}指令直接引用, 自动加前缀. 需要在 hyperref 之后加载
+% 例: 图片label为fig:1  => \cref{fig:1} -> Figure.1; \ref{fig:1} -> 1 (纯数字)
+\usepackage[capitalize]{cleveref}
+% \crefname{section}{Sec.}{Secs.}
+\Crefname{section}{Section}{Sections}
+\Crefname{table}{Table}{Tables}
+\crefname{table}{Table.}{Tabs.}
+
+% \setmainfont{Palatino Linotype.ttf}
+% \setCJKmainfont{SimHei.ttf}
+% \setCJKsansfont{Songti.ttf}
+% \setCJKmonofont{SimSun.ttf}
+\punctstyle{kaiming}
+% 偏好的几个字体, 可以根据需要自行加入字体ttf文件并调用
+
+\renewcommand{\emph}[1]{\begin{kaishu}#1\end{kaishu}}
+
+% 对 section 等环境的序号使用中文
+\renewcommand \thesection{\zhnum{section}、}
+\renewcommand \thesubsection{\arabic{section}.\arabic{subsection}}
+
+\tikzset{
+    link/.style={draw, thick, -stealth} % 定义 link 样式，包含绘制、粗线条和箭头
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%改这里可以修改实验报告表头的信息
+\newcommand{\name}{寇逸欣}
+\newcommand{\studentNum}{2023K8009922004}
+\newcommand{\major}{计算机科学与技术}
+\newcommand{\labNum}{14}
+\newcommand{\labName}{网络传输机制实验-可靠传输}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\input{tex_file/head.tex}
+
+\section{实验内容}
+\begin{enumerate}
+    \item 执行 \texttt{create\_randfile.sh}，生成待传输数据文件 \texttt{client-input.dat}
+    \item 运行给定网络拓扑（\texttt{tcp\_topo\_loss.py}）
+    \item 在节点 \texttt{h1} 上执行 TCP 程序
+    \begin{enumerate}
+        \item 执行脚本（\texttt{disable\_offloading.sh}，\texttt{disable\_tcp\_rst.sh}），禁止协议栈的相应功能
+        \item 在 \texttt{h1} 上运行 TCP 协议栈的服务器模式（\texttt{./tcp\_stack server 10001}）
+    \end{enumerate}
+    \item 在节点 \texttt{h2} 上执行 TCP 程序
+    \begin{enumerate}
+        \item 执行脚本（\texttt{disable\_offloading.sh}，\texttt{disable\_tcp\_rst.sh}），禁止协议栈的相应功能
+        \item 在 \texttt{h2} 上运行 TCP 协议栈的客户端模式（\texttt{./tcp\_stack client 10.0.0.1 10001}）
+        \begin{enumerate}
+            \item 客户端发送文件 \texttt{client-input.dat} 给服务器，服务器将收到的数据存储到文件 \texttt{server-output.dat}
+        \end{enumerate}
+    \end{enumerate}
+    \item 使用 \texttt{md5sum} 比较两个文件是否完全相同
+    \item 使用 \texttt{tcp\_stack.py} 替换两端任意一方，对端都能正确处理数据收发
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{fig/state_machine.png}
+    \caption{TCP 状态机图}
+    \label{fig:state_machine}
+\end{figure}
+
+\section{实验步骤}
+
+\subsection{数据结构设计}
+为了支持发送队列和乱序接收队列的管理，定义了新的数据结构 \texttt{struct data\_packet}，用于存储数据包的相关信息。同时在 \texttt{struct tcp\_sock} 中增加了发送队列 \texttt{send\_buf} 和乱序接收队列 \texttt{rcv\_ofo\_buf} 及其对应的互斥锁。
+
+\begin{lstlisting}[language=C, caption=数据结构定义]
+struct data_packet {
+    struct list_head list;
+    u8 flags;
+    u8 times;       // 重传次数
+    u32 seq;
+    u32 len;
+    u32 seq_end;
+    char *packet;   // 数据包内容
+};
+
+struct tcp_sock {
+    // ... existing code ...
+    // used to pend unacked packets
+    struct list_head send_buf;
+    // used to pend out-of-order packets
+    struct list_head rcv_ofo_buf;
+
+    pthread_mutex_t send_buf_lock;
+    pthread_mutex_t rcv_buf_lock;
+    // ... existing code ...
+};
+\end{lstlisting}
+
+此外，为了支持微秒级的重传定时器，修改了 \texttt{struct tcp\_timer} 中的 \texttt{timeout} 字段为 \texttt{long long} 类型。
+
+\subsection{发送队列维护}
+\subsubsection{加入发送队列}
+实现了 \texttt{new\_data\_block} 函数用于构建 \texttt{data\_packet} 结构体。在 \texttt{tcp\_sock\_connect} (SYN)、\texttt{tcp\_sock\_close} (FIN) 和 \texttt{tcp\_sock\_write} (Data) 等发送数据的函数中，调用该函数将数据包加入 \texttt{send\_buf} 队列，并启动重传定时器。
+
+\begin{lstlisting}[language=C]
+// 示例：在 tcp_sock_write 中加入发送队列
+struct data_packet *dp = new_data_block(TCP_PSH|TCP_ACK, tsk->snd_nxt, data_len, buf + len_send);
+pthread_mutex_lock(&tsk->send_buf_lock);
+list_add_tail(&dp->list, &tsk->send_buf);
+pthread_mutex_unlock(&tsk->send_buf_lock);
+
+// 发送数据包
+tcp_send_packet(tsk, packet, packet_len);
+
+// 启动重传定时器
+if(!tsk->retrans_timer.enable)
+    tcp_set_retrans_timer(tsk);
+\end{lstlisting}
+
+\subsubsection{清除已确认数据}
+实现了 \texttt{tcp\_free\_send\_buf} 函数。当收到 ACK 时，在 \texttt{tcp\_process} 中调用该函数，遍历 \texttt{send\_buf}，删除 \texttt{seq\_end} 小于等于 \texttt{ack} 的数据包，并更新定时器状态。
+
+\begin{lstlisting}[language=C]
+void tcp_free_send_buf(struct tcp_sock *tsk, struct tcp_cb *cb)
+{
+    struct data_packet *tmp, *q;
+    pthread_mutex_lock(&tsk->send_buf_lock);
+    list_for_each_entry_safe(tmp, q, &tsk->send_buf, list)
+    {
+        if(less_or_equal_32b(tmp->seq_end, cb->ack))
+        {
+            list_delete_entry(&tmp->list);
+            if(tmp->packet) free(tmp->packet);
+            free(tmp);
+            // 重置定时器逻辑...
+        }
+    }
+    pthread_mutex_unlock(&tsk->send_buf_lock);
+}
+\end{lstlisting}
+
+\subsection{乱序接收处理}
+\subsubsection{缓存乱序包}
+实现了 \texttt{tcp\_rcv\_ofo\_pkt} 函数。当接收到的数据包序列号不等于 \texttt{rcv\_nxt} 时，调用该函数将数据包按序列号顺序插入 \texttt{rcv\_ofo\_buf} 队列，并回复 ACK（携带期望的 \texttt{rcv\_nxt}）。
+
+\begin{lstlisting}[language=C]
+void tcp_rcv_ofo_pkt(struct tcp_sock *tsk, struct tcp_cb *cb)
+{
+    struct data_packet *dp = new_data_block(cb->flags, cb->seq, cb->pl_len, cb->payload);
+    // ... 遍历队列找到合适位置插入 ...
+    list_add_tail(&dp->list, pos);
+}
+\end{lstlisting}
+
+\subsubsection{处理接收队列}
+在 \texttt{tcp\_process} 中，当收到符合 \texttt{rcv\_nxt} 的数据包后，将其写入接收缓冲区，随后检查 \texttt{rcv\_ofo\_buf}。如果队列头部的数据包序列号等于更新后的 \texttt{rcv\_nxt}，则将其取出并写入接收缓冲区，重复此过程直到队列为空或序列号不连续。
+
+\begin{lstlisting}[language=C]
+// 检查乱序队列
+list_for_each_entry_safe(tmp, q, &tsk->rcv_ofo_buf, list) {
+    if(tmp->seq == tsk->rcv_nxt) {
+        // ... 写入接收缓冲区 ...
+        tsk->rcv_nxt = tmp->seq_end;
+        // ... 处理 FIN 标志 ...
+        list_delete_entry(&tmp->list);
+        free(tmp);
+    } else {
+        break;
+    }
+}
+\end{lstlisting}
+
+\subsection{超时重传机制}
+\subsubsection{定时器管理}
+实现了 \texttt{tcp\_set\_retrans\_timer} 和 \texttt{tcp\_unset\_retrans\_timer} 函数用于开启和关闭重传定时器。定时器类型设为 1。
+
+\subsubsection{超时处理与指数避退}
+修改了 \texttt{tcp\_scan\_timer\_list} 函数。当检测到重传定时器超时时：
+1. 检查重传次数，若超过 3 次，则发送 RST 并关闭连接。
+2. 若未超过次数，则重传队首数据包，并将超时时间翻倍（指数避退）。
+3. 调用 \texttt{tcp\_send\_retrans\_packet} 发送数据包（不增加 \texttt{snd\_nxt}）。
+
+\begin{lstlisting}[language=C]
+// 指数避退计算
+long long duration = TCP_RETRANS_INTERVAL_INITIAL * (1 << dp->times);
+if (cur_time - entry->timeout > duration) {
+    if (dp->times >= 3) {
+        // ... 发送 RST 并关闭连接 ...
+    } else {
+        dp->times++;
+        entry->timeout = cur_time;
+        tcp_send_retrans_packet(tsk, dp);
+    }
+}
+\end{lstlisting}
+
+\section{实验结果}
+先调用 \texttt{create\_randfile.sh} 生成待传输数据文件 \texttt{client-input.dat}，然后运行给定的网络拓扑脚本 \texttt{tcp\_topo\_loss.py}。在节点 \texttt{h1} 上执行 TCP 协议栈的服务器模式，并在节点 \texttt{h2} 上执行客户端模式。客户端发送文件后，服务器将收到的数据存储到文件 \texttt{server-output.dat}。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/h1_log.png}
+    \caption{h1 log 输出}
+    \label{fig:h1_log}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/h2_log.png}
+    \caption{h2 log 输出}
+    \label{fig:h2_log}
+\end{figure}
+
+使用 \texttt{md5sum} 比较两个文件，结果显示两者完全相同，验证了可靠传输的正确性。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{fig/md5sum.png}
+    \caption{md5sum 比较结果}
+    \label{fig:md5sum}
+\end{figure}
+
+\section{实验总结}
+本次实验代码量并不大，难点在于如何构建发送队列和乱序接收队列，以及如何处理超时重传机制（包括状态机的修改，缓存包和释放的时机）。实验结果表明，修改后的 TCP 协议栈能够正确处理数据传输，并且在丢包和乱序情况下仍能保证数据的完整性和顺序。
+
+在这次实验中遇到了一个重复释放的问题，这是由于在处理 TCP_LISTEN 状态收到 SYN 包时，使用了 \texttt{memcpy} 将父 socket（\texttt{tsk}）的内容复制到了新分配的子 socket（\texttt{child\_tsk}）中引起的。\texttt{alloc\_tcp\_sock} 为 \texttt{child\_tsk} 分配的资源被 \texttt{memcpy} 覆盖，导致 \texttt{child\_tsk} 和 \texttt{tsk} 共享同一个 \texttt{rcv\_buf}，从而引发了双重释放错误。解决方案是避免使用 \texttt{memcpy}，手动初始化子 socket，仅复制必要字段，确保父子 socket 的资源独立。
+\end{document}
