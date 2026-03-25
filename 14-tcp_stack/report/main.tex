@@ -1,1 +1,307 @@
+% 这是中国科学院大学计算机科学与技术专业《计算机组成原理（研讨课）》使用的实验报告 Latex 模板
+% 本模板与 2024 年 2 月 Jun-xiong Ji 完成, 更改自由 Shing-Ho Lin 和 Jun-Xiong Ji 于 2022 年 9 月共同完成的基础物理实验模板
+% 如有任何问题, 请联系: jijunxoing21@mails.ucas.ac.cn
+% This is the LaTeX template for report of Experiment of Computer Organization and Design courses, based on its provided Word template. 
+% This template is completed on Febrary 2024, based on the joint collabration of Shing-Ho Lin and Junxiong Ji in September 2022. 
+% Adding numerous pictures and equations leads to unsatisfying experience in Word. Therefore LaTeX is better. 
+% Feel free to contact me via: jijunxoing21@mails.ucas.ac.cn
+
+\documentclass[11pt]{article}
+
+\usepackage[a4paper]{geometry}
+\geometry{left=2.0cm,right=2.0cm,top=2.5cm,bottom=2.5cm}
+
+\usepackage{ctex} % 支持中文的LaTeX宏包
+\usepackage{amsmath,amsfonts,graphicx,subfigure,amssymb,bm,amsthm,mathrsfs,mathtools,breqn} % 数学公式和符号的宏包集合
+\usepackage{algorithm,algorithmicx} % 算法和伪代码
+\usepackage[noend]{algpseudocode} % 算法和伪代码
+\usepackage{fancyhdr} % 自定义页眉页脚
+\usepackage[framemethod=TikZ]{mdframed} % 创建带边框的框架
+\usepackage{fontspec} % 字体设置
+\usepackage{adjustbox} % 调整盒子大小
+\usepackage{fontsize} % 设置字体大小
+\usepackage{tikz,xcolor} % 绘制图形和使用颜色
+\usepackage{multicol} % 多栏排版
+\usepackage{multirow} % 表格中合并单元格
+\usepackage{pdfpages} % 插入PDF文件
+\usepackage{listings} % 在文档中插入源代码
+\usepackage{wrapfig} % 文字绕排图片
+\usepackage{bigstrut,multirow,rotating} % 支持在表格中使用特殊命令
+\usepackage{booktabs} % 创建美观的表格
+\usepackage{circuitikz} % 绘制电路图
+\usepackage{zhnumber} % 中文序号（用于标题）
+\usepackage{tabularx} % 表格折行
+\usepackage{tikz}
+\usetikzlibrary{positioning} % 加载 positioning 库
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\lstset{
+  frame=tb,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  framerule=1pt,
+  rulecolor=\color{gray!35},
+  backgroundcolor=\color{gray!5},
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+}
+
+% 超链接支持 (一定要在大多数包之后, cleveref 之前)
+% colorlinks=true 使链接文字着色而不是加方框; hidelinks 可去掉颜色
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=magenta]{hyperref}
+
+% 轻松引用, 可以用\cref{}指令直接引用, 自动加前缀. 需要在 hyperref 之后加载
+% 例: 图片label为fig:1  => \cref{fig:1} -> Figure.1; \ref{fig:1} -> 1 (纯数字)
+\usepackage[capitalize]{cleveref}
+% \crefname{section}{Sec.}{Secs.}
+\Crefname{section}{Section}{Sections}
+\Crefname{table}{Table}{Tables}
+\crefname{table}{Table.}{Tabs.}
+
+% \setmainfont{Palatino Linotype.ttf}
+% \setCJKmainfont{SimHei.ttf}
+% \setCJKsansfont{Songti.ttf}
+% \setCJKmonofont{SimSun.ttf}
+\punctstyle{kaiming}
+% 偏好的几个字体, 可以根据需要自行加入字体ttf文件并调用
+
+\renewcommand{\emph}[1]{\begin{kaishu}#1\end{kaishu}}
+
+% 对 section 等环境的序号使用中文
+\renewcommand \thesection{\zhnum{section}、}
+\renewcommand \thesubsection{\arabic{section}.\arabic{subsection}}
+
+\tikzset{
+    link/.style={draw, thick, -stealth} % 定义 link 样式，包含绘制、粗线条和箭头
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%改这里可以修改实验报告表头的信息
+\newcommand{\name}{寇逸欣}
+\newcommand{\studentNum}{2023K8009922004}
+\newcommand{\major}{计算机科学与技术}
+\newcommand{\labNum}{12}
+\newcommand{\labName}{网络传输机制实验（一）}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\input{tex_file/head.tex}
+
+\section{实验内容}
+本次实验的目标是基于现有框架，实现TCP传输机制。主要包括以下功能：
+\begin{enumerate}
+    \item 连接管理：实现服务端与客户端之间的三次握手和四次挥手。
+    \item 短消息传输：实现客户端向服务端发送短消息，服务端能够正确回显。
+    \item 大文件传输：实现客户端向服务端发送文件，服务端能够正确接收并保存文件。
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{fig/tcp_protocol.png}
+    \caption{TCP协议图}
+    \label{fig:tcp_protocol}
+\end{figure}
+
+\section{实验步骤}
+本实验主要涉及TCP的连接管理、数据传输与关闭的实现步骤。
+
+\subsection{TCP连接管理}
+TCP连接管理包括三次握手和四次挥手的实现。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/tcp_state.png}
+    \caption{TCP状态转移图}
+    \label{fig:tcp_state}
+\end{figure}
+
+\subsubsection{三次握手}
+TCP连接的建立分为服务端（被动打开）和客户端（主动打开）两种情况：
+
+\paragraph{服务端处理}
+服务端在 \texttt{TCP\_LISTEN} 状态下处理连接请求：
+\begin{itemize}
+    \item \textbf{收到SYN包：} 
+    \begin{enumerate}
+        \item 分配一个新的子Socket（\texttt{child\_tsk}），并初始化其五元组信息（源/目的IP和端口）。
+        \item 设置初始序列号（\texttt{iss}）和接收序列号（\texttt{rcv\_nxt}）。
+        \item 将子Socket加入监听队列（\texttt{listen\_queue}）。
+        \item 发送 \texttt{SYN|ACK} 包，并将状态转移为 \texttt{TCP\_SYN\_RECV}。
+    \end{enumerate}
+    \item \textbf{收到ACK包：}
+    \begin{enumerate}
+        \item 检查父Socket的接受队列是否已满。
+        \item 将子Socket加入父Socket的全连接队列（\texttt{accept\_queue}）。
+        \item 唤醒阻塞在 \texttt{accept()} 上的进程。
+        \item 将状态转移为 \texttt{TCP\_ESTABLISHED}。
+    \end{enumerate}
+\end{itemize}
+
+\paragraph{客户端处理}
+客户端在 \texttt{TCP\_SYN\_SENT} 状态下处理服务端的响应：
+\begin{itemize}
+    \item \textbf{收到SYN|ACK包：}
+    \begin{enumerate}
+        \item 更新接收序列号（\texttt{rcv\_nxt}）。
+        \item 发送ACK包确认服务端的SYN。
+        \item 唤醒阻塞在 \texttt{connect()} 上的进程。
+        \item 将状态转移为 \texttt{TCP\_ESTABLISHED}。
+    \end{enumerate}
+\end{itemize}
+
+\subsubsection{四次挥手}
+TCP连接的断开分为主动关闭方和被动关闭方两种情况：
+
+\paragraph{主动关闭方}
+主动关闭方的状态转移如下：
+\begin{itemize}
+    \item \textbf{\texttt{TCP\_FIN\_WAIT\_1}：}
+    \begin{itemize}
+        \item 如果收到ACK包，状态转移为 \texttt{TCP\_FIN\_WAIT\_2}。
+        \item 如果同时收到FIN包，直接转移为 \texttt{TCP\_TIME\_WAIT}，并设置定时器。
+    \end{itemize}
+    \item \textbf{\texttt{TCP\_FIN\_WAIT\_2}：}
+    \begin{itemize}
+        \item 如果收到FIN包，发送ACK包，状态转移为 \texttt{TCP\_TIME\_WAIT}，并设置定时器。
+    \end{itemize}
+\end{itemize}
+
+\paragraph{被动关闭方}
+被动关闭方的状态转移如下：
+\begin{itemize}
+    \item \textbf{\texttt{TCP\_LAST\_ACK}：}
+    \begin{itemize}
+        \item 如果收到ACK包，状态转移为 \texttt{TCP\_CLOSED}。
+    \end{itemize}
+\end{itemize}
+
+\subsection{数据传输}
+在 \texttt{TCP\_ESTABLISHED} 状态下，主要处理数据接收和被动关闭请求：
+\begin{itemize}
+    \item \textbf{数据接收：}
+    \begin{enumerate}
+        \item 检查序列号是否有效（调用 \texttt{is\_tcp\_seq\_valid}）。
+        \item 如果数据按序到达（\texttt{cb->seq == tsk->rcv\_nxt}），将数据写入接收缓冲区，并更新接收窗口。
+        \item 发送ACK包确认接收到的数据。
+    \end{enumerate}
+    \item \textbf{被动关闭：}
+    \begin{enumerate}
+        \item 如果收到FIN包，更新接收序列号并发送ACK包。
+        \item 将状态转移为 \texttt{TCP\_CLOSE\_WAIT}。
+    \end{enumerate}
+\end{itemize}
+
+\subsection{文件传输}
+文件传输的实现基于TCP协议的可靠数据传输机制。客户端通过调用 \texttt{tcp\_sock\_write()} 将数据发送到服务端，服务端通过调用 \texttt{tcp\_sock\_read()} 接收数据并进行相应处理。
+
+\subsubsection{文件传输过程}
+文件传输的实现分为客户端发送文件和服务端接收文件两个部分：
+
+\paragraph{客户端发送文件}
+客户端通过以下步骤实现文件的发送：
+\begin{enumerate}
+    \item 打开待发送的文件，并将文件内容读取到内存缓冲区中。
+    \item 调用 \texttt{tcp\_sock\_write()}，将文件数据分块发送到服务端。每次发送的数据大小受限于TCP报文的最大负载长度。
+    \item 发送完成后，关闭TCP连接。
+\end{enumerate}
+
+客户端的关键代码如下：
+\begin{verbatim}
+FILE *fp = fopen("client-input.dat", "r");
+char *data = (char *)malloc(10000000 * sizeof(char));
+int data_len = 0;
+while ((data[data_len++] = fgetc(fp)) != EOF);
+data_len--;
+fclose(fp);
+tcp_sock_write(tsk, data, data_len);
+free(data);
+tcp_sock_close(tsk);
+\end{verbatim}
+
+\paragraph{服务端接收文件}
+服务端通过以下步骤实现文件的接收：
+\begin{enumerate}
+    \item 调用 \texttt{tcp\_sock\_read()}，从TCP接收缓冲区中读取数据。
+    \item 将接收到的数据写入文件，直到客户端关闭连接。
+    \item 关闭文件并释放资源。
+\end{enumerate}
+
+\section{实验结果}
+\subsection{实验内容一：连接管理}
+在h1和h2上分别运行客户端和服务端程序，观察TCP连接的建立和断开过程。使用Wireshark抓包工具分析TCP三次握手和四次挥手的过程，结果如下：
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/tcp_handshake.png}
+    \caption{TCP三次握手与四次挥手过程}
+    \label{fig:tcp_handshake}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/tcp_state_client.png}
+    \caption{client端TCP连接状态变化}
+    \label{fig:tcp_state_client}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/tcp_state_server.png}
+    \caption{server端TCP连接状态变化}
+    \label{fig:tcp_state_server}
+\end{figure}
+
+把一端替换为tcp_stack_conn.py脚本，依旧可以观察到TCP连接的建立和断开过程，说明实现的TCP连接管理功能正确。
+
+\subsection{实验内容二：短消息收发}
+在h1和h2上分别运行客户端和服务端程序，观察短消息的发送和接收过程。使用Wireshark抓包工具分析短消息的传输过程，结果如下：
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/short_message.png}
+    \caption{短消息收发结果(client端显示)}
+    \label{fig:short_message}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/wireshark_short_message.png}
+    \label{fig:wireshark_short_message}
+    \caption{wireshark抓包分析短消息收发过程}
+\end{figure}
+
+使用tcp_stack_trans.py替换其中任意一端，对端都能正确收发数据
+
+\subsection{实验内容三：大文件传送}
+执行create_randfile.sh，生成待传输数据文件client-input.dat, 大小约为 4MB。分别在h1和h2上运行客户端和服务端程序，观察文件传输过程。使用md5sum命令验证传输前后的文件一致性，结果如下：
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/client-in.png}
+    \includegraphics[width=0.8\textwidth]{fig/server-out.png}
+    \includegraphics[width=0.5\textwidth]{fig/md5sum.png}
+    \caption{大文件传输结果及MD5校验}
+    \label{fig:file_transfer_md5}
+\end{figure}
+
+可以看到，传输前后的文件MD5值一致，说明文件传输功能实现正确。使用tcp_stack_trans.py替换其中任意一端，对端都能正确收发数据，说明实现的TCP数据传输功能正确。
+
+\section{实验中遇到的问题}
+在实验过程中，遇到了一些问题和挑战，主要包括以下几个方面：
+\begin{enumerate}
+    \item \textbf{代码量大且复杂：} TCP协议本身较为复杂，实现过程中需要处理多种状态和边界情况，同时本身代码框架中提供了很多辅助函数和数据结构，理解和使用这些代码需要花费较多时间。
+    \item \textbf{提交oj系统有隐形要求：} 在实现过程中，发现oj系统对代码的某些实现细节有隐形要求，例如程序实现需要在5s内完成，同时echo需要回显在终端中，同时不能在终端打印多余信息等，这些要求在实验文档中并未明确指出，导致调试过程中出现了一些困惑。
+    \item \textbf{调试困难：} 由于TCP协议涉及多个状态和复杂的交互过程，调试过程中需要仔细分析每个状态下的行为，使用Wireshark等工具进行抓包分析，同时需要对代码插入详细的log消息，以便定位问题。
+\end{enumerate}
+\end{document}
 
